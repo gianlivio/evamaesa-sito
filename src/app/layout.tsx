@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Testata } from "@/components/Testata";
-import { Piede } from "@/components/Piede";
 
 export const metadata: Metadata = {
   title: {
@@ -17,14 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it">
-      <body>
-        <a href="#contenuto" className="salta">
-          Vai al contenuto
-        </a>
-        <Testata />
-        <main id="contenuto">{children}</main>
-        <Piede />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

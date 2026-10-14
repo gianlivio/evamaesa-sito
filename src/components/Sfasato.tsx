@@ -1,4 +1,4 @@
-import type { CSSProperties, ElementType } from "react";
+import type { CSSProperties } from "react";
 
 /*
  * Titolo con lettere che entrano fuori asse e si assestano al caricamento.
@@ -14,7 +14,7 @@ function scarto(seed: number) {
 
 type Props = {
   testo: string;
-  as?: ElementType;
+  as?: "h1" | "h2" | "h3" | "p";
   giocoso?: boolean;
   className?: string;
 };

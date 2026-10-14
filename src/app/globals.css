@@ -449,15 +449,109 @@ fieldset.campo { border: 0; padding: 0; margin: 0; }
 .piede .minuto { font-size: var(--t-s); color: var(--inchiostro-tenue); display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; }
 .piede .minuto p { margin: 0; }
 
-/* ---------- Stanza ---------- */
 
-.stanza-segnaposto {
-  min-height: 60vh;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  background: var(--inchiostro);
-  color: white;
-  padding: 3rem var(--gutter);
+/* ---------- Stanza 3D ---------- */
+
+.stanza {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #0e1024;
+  color: #f6f1e6;
+  --pannello: rgb(14 16 36 / 0.74);
 }
-.stanza-segnaposto p { margin-left: auto; margin-right: auto; }
+.stanza-tela { position: absolute; inset: 0; touch-action: none; cursor: grab; }
+.stanza-tela:active { cursor: grabbing; }
+
+.stanza-attesa {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  background: #0e1024; color: #f6f1e6; font-family: var(--f-display); font-size: var(--t-xl);
+}
+
+.stanza-buio {
+  position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none;
+  transition: opacity 0.26s ease;
+}
+.stanza-buio.attivo { opacity: 1; }
+
+.stanza-alto {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 1rem var(--gutter);
+  pointer-events: none;
+}
+.stanza-alto > * { pointer-events: auto; }
+.stanza-alto h1 {
+  font-size: var(--t-l);
+  background: var(--pannello); padding: 0.35rem 0.9rem; border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
+.stanza-pillola, .stanza-apri, .stanza-freccia, .stanza-esci {
+  font: inherit; color: inherit; border: 0; cursor: pointer;
+  background: var(--pannello); backdrop-filter: blur(6px);
+  border-radius: 999px;
+}
+.stanza-pillola { padding: 0.55rem 1.1rem; font-weight: 600; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25); }
+.stanza-pillola[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--naso); }
+.stanza :focus-visible { outline: 2px solid var(--naso); outline-offset: 3px; }
+
+.stanza-suggerimento {
+  position: absolute; top: 4.5rem; left: 50%; transform: translateX(-50%); white-space: nowrap;
+  background: var(--pannello); padding: 0.45rem 1rem; border-radius: 999px;
+  font-size: var(--t-s); pointer-events: none; max-width: none; margin: 0;
+  animation: respira 2.4s ease-in-out infinite;
+}
+@keyframes respira { 50% { opacity: 0.55; } }
+
+.stanza-basso {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: grid; justify-items: center; gap: 0.75rem;
+  padding: 0 var(--gutter) max(1rem, env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.stanza-basso > * { pointer-events: auto; }
+
+.stanza-fuoco { display: flex; align-items: center; gap: 0.6rem; width: min(100%, 34rem); }
+.stanza-freccia { width: 2.75rem; height: 2.75rem; flex: none; font-size: 1.6rem; line-height: 1; }
+.stanza-didascalia {
+  flex: 1; min-width: 0;
+  background: var(--pannello); backdrop-filter: blur(6px);
+  border-radius: 1.25rem; padding: 0.8rem 1.1rem;
+  display: grid; gap: 0.2rem; text-align: center;
+}
+.stanza-didascalia strong { font-family: var(--f-display); font-weight: 400; font-size: var(--t-l); line-height: 1.15; }
+.stanza-didascalia span { font-size: var(--t-s); opacity: 0.85; }
+.stanza-apri {
+  justify-self: center; margin-top: 0.4rem; padding: 0.45rem 1.1rem;
+  background: #f6f1e6; color: var(--inchiostro); font-weight: 600; backdrop-filter: none;
+}
+.stanza-apri:disabled { opacity: 0.5; cursor: default; }
+
+.stanza-esci {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.5rem 1.1rem 0.5rem 0.8rem; text-decoration: none; font-size: var(--t-s);
+}
+.stanza-esci:hover { text-decoration: none; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4); }
+
+.stanza-velo {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: rgb(0 0 0 / 0.45); padding: var(--gutter);
+}
+.stanza-conferma {
+  background: var(--carta, #eef0f8); color: var(--inchiostro);
+  border-top: 4px solid var(--naso);
+  padding: 1.5rem; max-width: 26rem; border-radius: 0.5rem;
+}
+.stanza-conferma-titolo { font-family: var(--f-display); font-size: var(--t-xl); line-height: 1.15; margin-bottom: 0.75rem; }
+.stanza-conferma-azioni { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.25rem; }
+
+.stanza-ripiego {
+  position: absolute; inset: 0; display: grid; place-content: center; gap: 1rem;
+  text-align: center; padding: var(--gutter);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stanza-suggerimento { animation: none; }
+  .stanza-buio { transition: none; }
+}

@@ -26,7 +26,7 @@ export default async function SchedaOpera({ params }: Params) {
   const o = trovaOpera(slug);
   if (!o) notFound();
 
-  const avvisoTesto = o.avviso ?? "Questa opera contiene nudo ed è pensata per un pubblico adulto.";
+  const avvisoTesto = o.avviso ?? "Questa opera contiene nudo ed è riservata a un pubblico adulto.";
 
   const immagini = (
     <section className="sezione" aria-label="Immagini">
@@ -54,7 +54,7 @@ export default async function SchedaOpera({ params }: Params) {
         <p className="introduzione">{o.sottotitolo}</p>
       </header>
 
-      {o.perAdulti ? (
+      {o.pubblicoAdulto ? (
         <div className="sezione" style={{ marginTop: "2rem" }}>
           <Velo avviso={avvisoTesto}>{immagini}</Velo>
         </div>
@@ -108,7 +108,7 @@ export default async function SchedaOpera({ params }: Params) {
         </aside>
       </div>
 
-      {!o.perAdulti ? immagini : null}
+      {!o.pubblicoAdulto ? immagini : null}
 
       {o.date.length > 0 ? (
         <section className="sezione">

@@ -32,7 +32,7 @@ export const opere: Opera[] = [
       { ruolo: "Musiche", nome: "Francesca Valente, Filippo Poderini, Gianluca Lovreglio" },
     ],
     // DA VERIFICARE con l'artista se l'opera contiene nudo
-    perAdulti: false,
+    pubblicoAdulto: false,
     ancheInEventi: false,
     copertina: { alt: "Eva Maesa in scena in Girandola, Amen" },
     galleria: [
@@ -63,7 +63,7 @@ export const opere: Opera[] = [
       { ruolo: "Ideazione e domatrice", nome: "Eva Maesa" },
       { ruolo: "Costumi", nome: "Monica Bellei" },
     ],
-    perAdulti: false,
+    pubblicoAdulto: false,
     ancheInEventi: true,
     copertina: { alt: "Uno sgruzzo sui trampoli in piazza" },
     galleria: [
@@ -88,7 +88,7 @@ export const opere: Opera[] = [
     formato: "Sala o all'aperto",
     lingua: "Italiano, con molta azione non verbale",
     crediti: [{ ruolo: "Ideazione e interpretazione", nome: "Eva Maesa" }],
-    perAdulti: false,
+    pubblicoAdulto: false,
     ancheInEventi: true,
     copertina: { alt: "Fruoth Fru, la clownesse di Gorgoglìo" },
     galleria: [{ alt: "Gorgoglìo, in scena" }],
@@ -108,7 +108,7 @@ export const opere: Opera[] = [
     formato: "Lorem",
     lingua: "Lorem",
     crediti: [{ ruolo: "Ideazione e performer", nome: "Eva Maesa" }],
-    perAdulti: true,
+    pubblicoAdulto: true,
     avviso: "Questa performance contiene nudo. Le immagini sono riservate a un pubblico adulto.",
     ancheInEventi: false,
     copertina: { alt: "Immagine segnaposto" },

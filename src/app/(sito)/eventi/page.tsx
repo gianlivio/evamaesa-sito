@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default function Eventi() {
-  const spettacoli = opere.filter((o) => o.ancheInEventi && !o.perAdulti);
+  const spettacoli = opere.filter((o) => o.ancheInEventi && !o.pubblicoAdulto);
 
   return (
     <>

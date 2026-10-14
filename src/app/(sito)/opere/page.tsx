@@ -18,7 +18,7 @@ export default function Opere() {
       <section className="contenitore apertura">
         <Sfasato testo="Opere" />
         <p className="introduzione">
-          Spettacoli e performance di cui Eva è autrice. Le opere segnate con l’avviso contengono nudo e sono pensate per
+          Spettacoli e performance di cui Eva è autrice. Le opere segnate con l’avviso contengono nudo e sono riservate a
           un pubblico adulto.
         </p>
         <div className="azioni">
@@ -37,7 +37,7 @@ export default function Opere() {
                 <span className="anno">{o.anno ?? ""}</span>
                 <h3>
                   {o.titolo}
-                  {o.perAdulti ? <span className="etichetta-avviso">Per adulti</span> : null}
+                  {o.pubblicoAdulto ? <span className="etichetta-avviso">Pubblico adulto</span> : null}
                 </h3>
                 <span className="tipo">{tipi[o.tipo]}</span>
                 <p className="descr">{o.sottotitolo}</p>

@@ -23,8 +23,8 @@ export type Opera = {
   formato?: string;
   lingua?: string;
   crediti: { ruolo: string; nome: string }[];
-  /** mostra l'avviso sui contenuti e tiene l'opera fuori dalla home */
-  perAdulti: boolean;
+  /** opera riservata a un pubblico adulto: avviso sui contenuti, esclusa dalla home */
+  pubblicoAdulto: boolean;
   avviso?: string;
   /** genera il richiamo nella pagina Eventi */
   ancheInEventi: boolean;

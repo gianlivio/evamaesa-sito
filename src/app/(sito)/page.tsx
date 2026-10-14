@@ -6,7 +6,7 @@ import { opere } from "@/content/opere";
 
 export default function Home() {
   // in home solo opere senza avviso
-  const inVista = opere.filter((o) => !o.perAdulti).slice(0, 3);
+  const inVista = opere.filter((o) => !o.pubblicoAdulto).slice(0, 3);
 
   return (
     <>
