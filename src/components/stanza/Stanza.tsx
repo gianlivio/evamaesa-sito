@@ -10,6 +10,7 @@ import { Atrio, R, angoloSlot, type Porta } from "./Atrio";
 import { SalaOpera, LATO, NOMI_PARETI, PARETI, impagina } from "./SalaOpera";
 import { Regia } from "./Regia";
 import { OCCHI, fuocoSu, type Tema } from "./comune";
+import { orchestra, type NomeBrano } from "./suono";
 
 function useMovimentoRidotto() {
   const [ridotto, setRidotto] = useState(false);
@@ -61,6 +62,8 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
   const [scatto, setScatto] = useState(0);
   const [trascinato, setTrascinato] = useState(false);
   const entra = useRef<HTMLButtonElement>(null);
+  const orc = orchestra();
+  const [audio, setAudio] = useState(orc.attivo);
 
   const opera = useMemo(() => opere.find((o) => o.slug === slugAperta) ?? null, [opere, slugAperta]);
   const imp = useMemo(() => (opera ? impagina(opera, aspettoVideo) : null), [opera, aspettoVideo]);
@@ -130,8 +133,10 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
   );
 
   const cambiaTema = useCallback(() => {
+    orc.avvia();
+    orc.effetto(tema === "sala" ? "leva-circo" : "leva-sala");
     nelBuio(() => setTema((t) => (t === "sala" ? "circo" : "sala")));
-  }, [nelBuio]);
+  }, [nelBuio, orc, tema]);
 
   const aggiornaUrl = (slug: string | null) => {
     const url = slug ? `${window.location.pathname}?opera=${slug}` : window.location.pathname;
@@ -155,15 +160,17 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
 
   const varca = useCallback(
     (slug: string) => {
+      orc.effetto("porta");
       setConferma(null);
       setScelta(slug);
       window.setTimeout(() => entraInSala(slug), ridotto ? 0 : 950);
     },
-    [entraInSala, ridotto],
+    [entraInSala, ridotto, orc],
   );
 
   const esci = useCallback(() => {
     const i = porte.findIndex((p) => p.slug === slugAperta);
+    orc.effetto("uscita");
     nelBuio(() => {
       setModo("atrio");
       setSlugAperta(null);
@@ -172,7 +179,7 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
       setScatto((s) => s + 1);
       aggiornaUrl(null);
     });
-  }, [nelBuio, porte, slugAperta, totaleAtrio]);
+  }, [nelBuio, porte, slugAperta, totaleAtrio, orc]);
 
   const apriScheda = useCallback(() => {
     if (!opera) return;
@@ -202,10 +209,11 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
       }
       const el = elementi.find((x) => x.id === id);
       if (el) guarda(PARETI.indexOf(el.a), 4);
+      orc.effetto("pop");
       setFuocoId((corrente) => (corrente === id ? null : id));
       setTrascinato(true);
     },
-    [elementi, guarda],
+    [elementi, guarda, orc],
   );
 
   // apertura diretta da un link /stanza?opera=...
@@ -224,6 +232,43 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
     if (conferma) entra.current?.focus();
   }, [conferma]);
 
+  /* ---- suono ---- */
+
+  useEffect(() => {
+    const avvia = () => orc.avvia();
+    window.addEventListener("pointerdown", avvia);
+    window.addEventListener("keydown", avvia);
+    window.addEventListener("touchstart", avvia);
+    return () => {
+      window.removeEventListener("pointerdown", avvia);
+      window.removeEventListener("keydown", avvia);
+      window.removeEventListener("touchstart", avvia);
+      orc.ferma();
+    };
+  }, [orc]);
+
+  useEffect(() => {
+    const brani: string[] = ["girandola-amen", "gorgoglio", "animali-mai"];
+    const nome: NomeBrano =
+      modo === "atrio" ? (tema === "circo" ? "atrio-circo" : "atrio-sala") : brani.includes(slugAperta ?? "") ? (slugAperta as NomeBrano) : "atrio-sala";
+    orc.suona(nome);
+  }, [orc, modo, tema, slugAperta]);
+
+  // quando il video parla, la musica si abbassa
+  useEffect(() => {
+    orc.abbassa(modo === "opera" && fuocoId === "media" && !!opera?.teaser);
+  }, [orc, modo, fuocoId, opera]);
+
+  useEffect(() => {
+    if (conferma) orc.effetto("campanello");
+  }, [orc, conferma]);
+
+  const cambiaAudio = () => {
+    const si = !audio;
+    setAudio(si);
+    orc.setAttivo(si);
+  };
+
   /* ---- foto ---- */
 
   const indiceFoto = fuocoId?.startsWith("foto-") ? Number(fuocoId.slice(5)) : -1;
@@ -231,9 +276,10 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
   const sfoglia = useCallback(
     (verso: 1 | -1) => {
       if (indiceFoto < 0 || !nFoto) return;
+      orc.effetto("sfoglia");
       setFuocoId(`foto-${(indiceFoto + verso + nFoto) % nFoto}`);
     },
-    [indiceFoto, nFoto],
+    [indiceFoto, nFoto, orc],
   );
 
   /* ---- tastiera ---- */
@@ -413,6 +459,7 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
                 onSopra={setSopra}
                 onApri={apri}
                 onLeva={cambiaTema}
+                onClacson={() => orc.effetto("clacson")}
               />
             ) : opera && imp ? (
               <SalaOpera
@@ -435,9 +482,14 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
 
       <header className="stanza-alto">
         <h1>{modo === "opera" && opera ? opera.titolo : "La stanza"}</h1>
-        <button type="button" className="stanza-pillola" aria-pressed={tema === "circo"} onClick={cambiaTema}>
-          {tema === "sala" ? "Accendi il circo" : "Torna in sala"}
-        </button>
+        <div className="stanza-comandi">
+          <button type="button" className="stanza-pillola" aria-pressed={audio} onClick={cambiaAudio}>
+            {audio ? "Suono sì" : "Suono no"}
+          </button>
+          <button type="button" className="stanza-pillola" aria-pressed={tema === "circo"} onClick={cambiaTema}>
+            {tema === "sala" ? "Accendi il circo" : "Torna in sala"}
+          </button>
+        </div>
       </header>
 
       {!trascinato ? (

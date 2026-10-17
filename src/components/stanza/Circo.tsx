@@ -183,13 +183,16 @@ export function Clown({
   velocita,
   fase,
   ridotto,
+  onClacson,
 }: {
   stile: StileClown;
   raggio: number;
   velocita: number; // radianti al secondo lungo il cerchio; il segno dà il verso
   fase: number;
   ridotto: boolean;
+  onClacson?: () => void;
 }) {
+  const salto = useRef(0);
   const radice = useRef<THREE.Group>(null);
   const busto = useRef<THREE.Group>(null);
   const gambaS = useRef<THREE.Group>(null);
@@ -211,7 +214,10 @@ export function Clown({
     const cadenza = 5.5;
     const p = ridotto ? 0 : Math.sin(t * cadenza + fase);
     if (busto.current) {
-      busto.current.position.y = ridotto ? 0 : Math.abs(Math.cos(t * cadenza + fase)) * 0.045;
+      // saltello quando suona il clacson
+      if (salto.current === -1) salto.current = t + 0.6;
+      const s = Math.max(0, salto.current - t);
+      busto.current.position.y = (ridotto ? 0 : Math.abs(Math.cos(t * cadenza + fase)) * 0.045) + Math.sin(s * Math.PI * 2.5) * s * 0.5;
       busto.current.rotation.z = p * 0.06; // ondeggia come chi porta scarpe enormi
     }
     if (gambaS.current) gambaS.current.rotation.x = p * 0.5;
@@ -265,7 +271,15 @@ export function Clown({
   );
 
   return (
-    <group ref={radice}>
+    <group
+      ref={radice}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (e.delta > 6 || !onClacson) return;
+        salto.current = -1; // il prossimo fotogramma fissa l'istante del saltello
+        onClacson();
+      }}
+    >
       {gamba(1, gambaS)}
       {gamba(-1, gambaD)}
       <group ref={busto}>

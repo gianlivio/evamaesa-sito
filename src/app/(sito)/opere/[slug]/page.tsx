@@ -35,7 +35,11 @@ export default async function SchedaOpera({ params }: Params) {
           src={o.teaser}
           poster={o.teaser.replace(/\.mp4$/, ".jpg")}
           controls
-          preload="metadata"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
           style={{ width: "100%", maxWidth: "22rem", marginBottom: "1rem" }}
         >
           Il tuo browser non riproduce questo video.

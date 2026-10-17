@@ -29,7 +29,7 @@ export function angoloSlot(i: number, totale: number) {
 
 /* ---------- Ambiente ---------- */
 
-function CircoAtrio({ totale, ridotto }: { totale: number; ridotto: boolean }) {
+function CircoAtrio({ totale, ridotto, onClacson }: { totale: number; ridotto: boolean; onClacson: () => void }) {
   const strisce = useStrisce("#c8322a", "#f4e7cf", 18);
   const apice: [number, number, number] = [0, H + 2.7, 0];
   // festoni: a raggiera dal colmo del tendone e a ghirlanda lungo la parete
@@ -90,14 +90,24 @@ function CircoAtrio({ totale, ridotto }: { totale: number; ridotto: boolean }) {
         );
       })}
       {compagnia.map((c, i) => (
-        <Clown key={i} {...c} ridotto={ridotto} />
+        <Clown key={i} {...c} ridotto={ridotto} onClacson={onClacson} />
       ))}
     </group>
   );
 }
 
-function Ambiente({ tema, totale, ridotto }: { tema: Tema; totale: number; ridotto: boolean }) {
-  if (tema === "circo") return <CircoAtrio totale={totale} ridotto={ridotto} />;
+function Ambiente({
+  tema,
+  totale,
+  ridotto,
+  onClacson,
+}: {
+  tema: Tema;
+  totale: number;
+  ridotto: boolean;
+  onClacson: () => void;
+}) {
+  if (tema === "circo") return <CircoAtrio totale={totale} ridotto={ridotto} onClacson={onClacson} />;
   return (
     <group key="sala">
       <ambientLight intensity={0.6} color="#b9bde8" />
@@ -387,6 +397,7 @@ export function Atrio({
   onSopra,
   onApri,
   onLeva,
+  onClacson,
 }: {
   porte: Porta[];
   tema: Tema;
@@ -397,13 +408,14 @@ export function Atrio({
   onSopra: (chi: string | null) => void;
   onApri: (indice: number) => void;
   onLeva: () => void;
+  onClacson: () => void;
 }) {
   const totale = porte.length + 1; // l'ultimo slot è l'interruttore
 
   return (
     <>
       <color attach="background" args={[tema === "sala" ? "#0e1024" : "#2a1410"]} />
-      <Ambiente tema={tema} totale={totale} ridotto={ridotto} />
+      <Ambiente tema={tema} totale={totale} ridotto={ridotto} onClacson={onClacson} />
       {porte.map((p, i) => {
         const a = angoloSlot(i, totale);
         const stato: StatoPorta =

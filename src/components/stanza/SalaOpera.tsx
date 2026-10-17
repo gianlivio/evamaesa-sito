@@ -174,46 +174,79 @@ function Video({
   onClick: Clic;
   onSopra: (s: boolean) => void;
 }) {
-  const [video] = useState(() => {
-    const v = document.createElement("video");
-    v.src = src;
-    v.loop = true;
-    v.muted = true;
-    v.playsInline = true;
-    v.setAttribute("playsinline", "");
-    v.preload = "auto";
-    return v;
-  });
-  const texture = useMemo(() => {
-    const t = new THREE.VideoTexture(video);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }, [video]);
   const anteprima = useTexture(src.replace(/\.mp4$/, ".jpg"), (t) => {
     (t as THREE.Texture).colorSpace = THREE.SRGBColorSpace;
   }) as THREE.Texture;
+  const [texture, setTexture] = useState<THREE.VideoTexture | null>(null);
   const [scorre, setScorre] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  /*
+   * Il video sta nel documento (nascosto) con autoplay, muted e playsinline impostati
+   * prima della sorgente: è la combinazione che Chrome, Firefox e Safari, anche su iPhone,
+   * accettano per l'avvio automatico senza clic.
+   */
   useEffect(() => {
-    const meta = () => video.videoWidth && onAspetto(video.videoWidth / video.videoHeight);
-    const via = () => setScorre(true);
-    video.addEventListener("loadedmetadata", meta);
-    video.addEventListener("playing", via);
-    video.play().catch(() => {});
-    return () => {
-      video.removeEventListener("loadedmetadata", meta);
-      video.removeEventListener("playing", via);
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-      texture.dispose();
+    const v = document.createElement("video");
+    v.muted = true;
+    v.defaultMuted = true;
+    v.loop = true;
+    v.autoplay = true;
+    v.playsInline = true;
+    v.preload = "auto";
+    v.setAttribute("muted", "");
+    v.setAttribute("autoplay", "");
+    v.setAttribute("playsinline", "");
+    v.setAttribute("aria-hidden", "true");
+    Object.assign(v.style, { position: "fixed", left: "0", top: "0", width: "2px", height: "2px", opacity: "0", pointerEvents: "none" });
+    v.src = src;
+    document.body.appendChild(v);
+    videoRef.current = v;
+
+    const t = new THREE.VideoTexture(v);
+    t.colorSpace = THREE.SRGBColorSpace;
+    setTexture(t);
+
+    const meta = () => v.videoWidth && onAspetto(v.videoWidth / v.videoHeight);
+    const via = () => {
+      if (v.currentTime > 0 || !v.paused) setScorre(true);
     };
-  }, [video, texture, onAspetto]);
+    const prova = () => {
+      if (v.paused) v.play().catch(() => {});
+    };
+    v.addEventListener("loadedmetadata", meta);
+    v.addEventListener("playing", via);
+    v.addEventListener("timeupdate", via);
+    v.addEventListener("canplay", prova);
+    prova();
+    // se il browser blocca l'avvio automatico, parte al primo gesto nella pagina
+    window.addEventListener("pointerdown", prova);
+    window.addEventListener("keydown", prova);
+    window.addEventListener("touchstart", prova);
+
+    return () => {
+      v.removeEventListener("loadedmetadata", meta);
+      v.removeEventListener("playing", via);
+      v.removeEventListener("timeupdate", via);
+      v.removeEventListener("canplay", prova);
+      window.removeEventListener("pointerdown", prova);
+      window.removeEventListener("keydown", prova);
+      window.removeEventListener("touchstart", prova);
+      v.pause();
+      v.removeAttribute("src");
+      v.load();
+      v.remove();
+      t.dispose();
+      videoRef.current = null;
+    };
+  }, [src, onAspetto]);
 
   useEffect(() => {
-    video.muted = !audio;
-    if (audio) video.play().catch(() => {});
-  }, [audio, video]);
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !audio;
+    v.play().catch(() => {});
+  }, [audio, texture]);
 
   const { position, rotation } = suParete(el.a, LATO - 0.02);
   return (
@@ -232,7 +265,7 @@ function Video({
         onPointerOut={() => onSopra(false)}
       >
         <planeGeometry args={[el.w, el.h]} />
-        <meshBasicMaterial map={scorre ? texture : anteprima} toneMapped={false} />
+        <meshBasicMaterial key={scorre && texture ? "video" : "anteprima"} map={scorre && texture ? texture : anteprima} toneMapped={false} />
       </mesh>
     </group>
   );
