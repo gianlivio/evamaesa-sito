@@ -399,6 +399,10 @@ main { padding-bottom: 6rem; }
 @media (min-width: 56rem) {
   .bio { grid-template-columns: 20rem minmax(0, 1fr); gap: 4rem; align-items: start; }
 }
+.gruppo-percorso + .gruppo-percorso { margin-top: 2.5rem; }
+.gruppo-percorso h3 { margin: 0 0 0.75rem; }
+.titolo-casting { margin: 3rem 0 0.75rem; }
+.casting { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); column-gap: 2rem; max-width: 56rem; }
 .esperienze { list-style: none; margin: 0; padding: 0; }
 .esperienze li {
   display: grid;

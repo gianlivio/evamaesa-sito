@@ -1,0 +1,40 @@
+/* Curriculum in A4: due colonne, solo inchiostro e un accento rosso */
+@page { size: A4; margin: 14mm 14mm 14mm 14mm; }
+:root:has(.cv), :root:has(.cv) body { background: #fff; color: #1d2142; }
+.cv {
+  display: grid;
+  grid-template-columns: 52mm 1fr;
+  gap: 9mm;
+  max-width: 182mm;
+  margin: 0 auto;
+  font-family: var(--f-testo);
+  font-size: 9pt;
+  line-height: 1.45;
+  color: #1d2142;
+}
+.cv h1, .cv h2, .cv h3 { font-family: var(--f-display); font-weight: 400; color: #1d2142; }
+.cv h1 { font-size: 30pt; line-height: 1; margin: 0; }
+.cv .punto { color: #e0412f; }
+.cv h2 { font-size: 12.5pt; margin: 5mm 0 2mm; padding-bottom: 1mm; border-bottom: 0.4pt solid #c9cbe0; }
+.cv h3 { font-size: 10.5pt; margin: 4mm 0 1.5mm; }
+.cv p { margin: 0 0 2mm; }
+.cv ul { margin: 0; padding: 0; list-style: none; }
+.cv dl { margin: 0; }
+.cv dt { color: #5d6080; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+.cv dd { margin: 0 0 1.5mm; }
+.cv-lato { font-size: 8.5pt; }
+.cv-lato h2:first-of-type { margin-top: 5mm; }
+.cv-lato li { margin-bottom: 0.6mm; }
+.cv-foto { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; object-position: 50% 20%; display: block; }
+.cv-riga { display: flex; justify-content: space-between; gap: 2mm; border-bottom: 0.3pt solid #e3e4ef; padding: 0.8mm 0; }
+.cv-riga dt, .cv-riga dd { margin: 0; }
+.cv-riga dd { text-align: right; }
+.cv-sopra { color: #5d6080; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1mm !important; }
+.cv-discipline { font-size: 10.5pt; margin-top: 2mm !important; }
+.cv-gruppo li { display: grid; grid-template-columns: 17mm 1fr; gap: 3mm; padding: 1mm 0; border-top: 0.3pt solid #e3e4ef; break-inside: avoid; }
+.cv-gruppo h3 { break-after: avoid; }
+.cv-anni { color: #5d6080; font-variant-numeric: tabular-nums; }
+.cv-privacy { margin-top: 6mm !important; font-size: 7pt; color: #5d6080; }
+@media screen {
+  .cv { padding: 14mm 0; }
+}

@@ -41,13 +41,6 @@ export type Opera = {
   date: Data[];
 };
 
-export type Esperienza = {
-  anno?: string;
-  tipo: "formazione" | "compagnia" | "collaborazione" | "educazione";
-  titolo: string;
-  descrizione: string;
-};
-
 export type FormatEvento = {
   slug: string;
   nome: string;

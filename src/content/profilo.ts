@@ -1,10 +1,9 @@
-import type { Esperienza, FormatEvento, Media } from "./tipi";
+import type { FormatEvento, Media } from "./tipi";
 import type { Lingua, Tr } from "@/i18n/lingue";
 
 const recapiti = {
   nome: "Eva Maesa",
   alias: "MaEva",
-  cv: "/documenti/eva-maesa-cv.pdf",
   email: "evamaesamail@gmail.com",
   telefono: "+39 328 903 2760",
   telefonoHref: "+393289032760",
@@ -57,6 +56,7 @@ const testiProfilo: { discipline: Tr; presentazione: Tr; bio: Tr[]; zona: Tr } =
 export function profiloIn(l: Lingua) {
   return {
     ...recapiti,
+    cv: l === "it" ? "/documenti/eva-maesa-cv.pdf" : `/documenti/eva-maesa-cv-${l}.pdf`,
     discipline: testiProfilo.discipline[l],
     presentazione: testiProfilo.presentazione[l],
     bio: testiProfilo.bio.map((b) => b[l]),
@@ -64,45 +64,6 @@ export function profiloIn(l: Lingua) {
   };
 }
 
-const esperienzeS: { anno?: string; tipo: Esperienza["tipo"]; titolo: Tr; descrizione: Tr }[] = [
-  {
-    tipo: "formazione",
-    titolo: { it: "PATS, Roma", en: "PATS, Rome", fr: "PATS, Rome" },
-    descrizione: { it: "Percorso di formazione attoriale.", en: "Actor training.", fr: "Formation d'actrice." },
-  },
-  {
-    tipo: "formazione",
-    titolo: { it: "Accademia Pietro Sharoff, Roma", en: "Pietro Sharoff Academy, Rome", fr: "Académie Pietro Sharoff, Rome" },
-    descrizione: { it: "Ammessa direttamente al secondo anno.", en: "Admitted directly to the second year.", fr: "Admise directement en deuxième année." },
-  },
-  {
-    tipo: "compagnia",
-    titolo: { it: "Ensamble Lodi", en: "Ensamble Lodi", fr: "Ensamble Lodi" },
-    descrizione: { it: "Lavoro e vita in compagnia.", en: "Working and living with the company.", fr: "Travail et vie en compagnie." },
-  },
-  {
-    tipo: "educazione",
-    titolo: { it: "Educatrice", en: "Educator", fr: "Éducatrice" },
-    descrizione: {
-      it: "Laboratori di integrazione e comunicazione non violenta.",
-      en: "Workshops on inclusion and non-violent communication.",
-      fr: "Ateliers d'intégration et de communication non violente.",
-    },
-  },
-  {
-    anno: "Lorem",
-    tipo: "collaborazione",
-    titolo: { it: "Collaborazione di prova", en: "Sample collaboration", fr: "Collaboration d'exemple" },
-    descrizione: {
-      it: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      en: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      fr: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    },
-  },
-];
-
-export const esperienzeIn = (l: Lingua): Esperienza[] =>
-  esperienzeS.map((e) => ({ anno: e.anno, tipo: e.tipo, titolo: e.titolo[l], descrizione: e.descrizione[l] }));
 
 const occasioniS: Tr[] = [
   { it: "Feste di compleanno e feste per bambini", en: "Birthday and children's parties", fr: "Anniversaires et fêtes d'enfants" },

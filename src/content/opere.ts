@@ -281,6 +281,55 @@ const sorgente: OperaSorgente[] = [
     date: [],
   },
   {
+    // DA COMPLETARE con Eva: sinossi e testo (dal CV: 2021, testi di Giulia Berra, regia di Eva)
+    slug: "corpomente",
+    titolo: "CorpoMente",
+    anno: 2021,
+    tipo: "spettacolo",
+    sottotitolo: { it: "Spettacolo", en: "Show", fr: "Spectacle" },
+    sinossi: {
+      it: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      en: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      fr: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    },
+    testo: [],
+    crediti: [
+      { ruolo: { it: "Regia", en: "Director", fr: "Mise en scène" }, nome: "Eva Maesa" },
+      { ruolo: { it: "Testi", en: "Texts", fr: "Textes" }, nome: "Giulia Berra" },
+      { ruolo: { it: "Produzione", en: "Production", fr: "Production" }, nome: "Teatro PanECapperi" },
+    ],
+    pubblicoAdulto: false,
+    ancheInEventi: false,
+    copertina: {
+      src: "/media/corpomente/01.jpg",
+      fuoco: "50% 30%",
+      alt: {
+        it: "Eva distesa su un cubo bianco, in un cortile, con altri cubi scritti a mano",
+        en: "Eva lying on a white cube in a courtyard, beside other handwritten cubes",
+        fr: "Eva allongée sur un cube blanc dans une cour, près d'autres cubes écrits à la main",
+      },
+    },
+    galleria: [
+      {
+        src: "/media/corpomente/02.jpg",
+        alt: {
+          it: "In bianco e nero, Eva piegata all'indietro sopra un cubo bianco",
+          en: "In black and white, Eva arched backwards over a white cube",
+          fr: "En noir et blanc, Eva cambrée en arrière au-dessus d'un cube blanc",
+        },
+      },
+      {
+        src: "/media/corpomente/03.jpg",
+        alt: {
+          it: "In bianco e nero, il profilo di Eva dietro un telo bianco",
+          en: "In black and white, Eva's profile behind a white sheet",
+          fr: "En noir et blanc, le profil d'Eva derrière un drap blanc",
+        },
+      },
+    ],
+    date: [],
+  },
+  {
     // DA COMPLETARE con Eva: anno, descrizione, crediti, foto
     slug: "cattiva-incivile-citta",
     titolo: "Cattiva incivile città",
