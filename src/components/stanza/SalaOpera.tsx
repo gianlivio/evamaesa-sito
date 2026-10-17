@@ -1,0 +1,650 @@
+"use client";
+
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { type ThreeEvent } from "@react-three/fiber";
+import { Text, useTexture } from "@react-three/drei";
+import * as THREE from "three";
+import type { Media, Opera } from "@/content/tipi";
+import { FONT_TESTO, FONT_TITOLI, suParete, useStrisce, type Tema } from "./comune";
+import { Festone } from "./Circo";
+
+/*
+ * Sala quadrata dedicata a un'opera. Pareti, viste dal centro:
+ *   0 (davanti)   titolo e video, o copertina
+ *   1 (destra)    foto
+ *   2 (dietro)    testi, dati e crediti
+ *   3 (sinistra)  porta per tornare nell'atrio e targa della scheda completa
+ */
+
+export const LATO = 5.5; // metà lato della sala
+const ALTEZZA = 5;
+export const PARETI = [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2];
+export const NOMI_PARETI = ["Titolo e video", "Foto", "Testi e crediti", "Uscita"];
+
+export type Elemento = { id: string; a: number; x: number; y: number; w: number; h: number };
+
+export type Impaginato = {
+  media: Elemento;
+  mediaImmagine?: Media; // copertina sulla parete 0 quando non c'è video
+  foto: (Elemento & { media: Media })[];
+  testo: Elemento;
+  dati: Elemento;
+};
+
+/** Stima l'altezza di un blocco di testo per impilare i blocchi sulla parete. */
+function altezzaTesto(testo: string, corpo: number, larghezza: number, interlinea: number, em = 0.5) {
+  const perRiga = Math.max(1, Math.floor(larghezza / (corpo * em)));
+  const righe = testo.split("\n").reduce((n, p) => n + Math.max(1, Math.ceil(p.length / perRiga)), 0);
+  return righe * corpo * interlinea;
+}
+
+// misure dei testi sulla parete 2, condivise da impaginazione e disegno
+export const T = { sinossi: 0.19, testo: 0.098, etichetta: 0.08, valore: 0.11, margine: 0.3, cima: 4.0 };
+
+export function vociDati(opera: Opera): [string, string][] {
+  return [
+    ...(opera.durata ? [["Durata", opera.durata] as [string, string]] : []),
+    ...(opera.formato ? [["Formato", opera.formato] as [string, string]] : []),
+    ...(opera.lingua ? [["Lingua", opera.lingua] as [string, string]] : []),
+    ...opera.crediti.map((c) => [c.ruolo, c.nome] as [string, string]),
+  ];
+}
+
+export function altezzaVoce(valore: string, larghezza: number) {
+  return T.etichetta * 1.5 + altezzaTesto(valore, T.valore, larghezza, 1.35) + 0.14;
+}
+
+export function impagina(opera: Opera, aspettoVideo: number): Impaginato {
+  const hMedia = 2.6;
+  const media: Elemento = {
+    id: "media",
+    a: PARETI[0],
+    x: 0,
+    y: 0.45 + hMedia / 2,
+    w: opera.teaser ? hMedia * aspettoVideo : 3.6,
+    h: hMedia,
+  };
+  const immagini = opera.teaser ? [opera.copertina, ...opera.galleria] : opera.galleria;
+  const immaginiConFile = immagini.filter((m) => m.src);
+
+  const n = immaginiConFile.length;
+  const righe = n <= 3 ? 1 : n <= 8 ? 2 : 3;
+  const colonne = Math.max(1, Math.ceil(n / righe));
+  const larghezza = 9.6;
+  const altezza = righe === 1 ? 2.5 : righe === 2 ? 3.2 : 3.5;
+  const base = righe === 1 ? 0.9 : 0.45;
+  const cw = larghezza / colonne;
+  const ch = altezza / righe;
+  const nUltima = n - colonne * (righe - 1);
+
+  const foto = immaginiConFile.map((m, i) => {
+    const riga = Math.floor(i / colonne);
+    const col = i % colonne;
+    const scostamento = riga === righe - 1 ? ((colonne - nUltima) * cw) / 2 : 0;
+    return {
+      id: `foto-${i}`,
+      a: PARETI[1],
+      x: -larghezza / 2 + cw * (col + 0.5) + scostamento,
+      y: base + altezza - ch * (riga + 0.5),
+      w: cw - 0.28,
+      h: ch - 0.28,
+      media: m,
+    };
+  });
+
+  // i pannelli dei testi si adattano al contenuto
+  const lT = 6.6 - 2 * T.margine;
+  const hTesti =
+    altezzaTesto(opera.sinossi, T.sinossi, lT, 1.25) + 0.22 + altezzaTesto(opera.testo.join("\n\n"), T.testo, lT, 1.5);
+  const hDati = vociDati(opera).reduce((h, [, v]) => h + altezzaVoce(v, 3.2 - 0.5), 0);
+  const hPannelli = Math.min(3.6, Math.max(1.6, Math.max(hTesti, hDati) + 2 * T.margine));
+
+  return {
+    media,
+    mediaImmagine: opera.teaser ? undefined : opera.copertina.src ? opera.copertina : undefined,
+    foto,
+    testo: { id: "testo", a: PARETI[2], x: -1.45, y: T.cima - hPannelli / 2, w: 6.6, h: hPannelli },
+    dati: { id: "dati", a: PARETI[2], x: 3.4, y: T.cima - hPannelli / 2, w: 3.2, h: hPannelli },
+  };
+}
+
+/* ---------- Pezzi ---------- */
+
+type Clic = (e: ThreeEvent<MouseEvent>) => void;
+
+function cliccabile(azione: () => void): Clic {
+  return (e) => {
+    e.stopPropagation();
+    if (e.delta > 6) return; // era un trascinamento
+    azione();
+  };
+}
+
+function Quadro({
+  el,
+  texture,
+  tema,
+  onClick,
+  onSopra,
+}: {
+  el: Elemento;
+  texture: THREE.Texture;
+  tema: Tema;
+  onClick: Clic;
+  onSopra: (s: boolean) => void;
+}) {
+  const img = texture.image as { width: number; height: number };
+  const ar = img.width / img.height;
+  const [pw, ph] = ar > el.w / el.h ? [el.w, el.w / ar] : [el.h * ar, el.h];
+  const { position, rotation } = suParete(el.a, LATO - 0.02);
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[el.x, el.y, 0.01]}>
+        <planeGeometry args={[pw + 0.1, ph + 0.1]} />
+        <meshStandardMaterial color={tema === "sala" ? "#14162a" : "#f4e7cf"} roughness={0.6} />
+      </mesh>
+      <mesh
+        position={[el.x, el.y, 0.02]}
+        onClick={onClick}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          onSopra(true);
+        }}
+        onPointerOut={() => onSopra(false)}
+      >
+        <planeGeometry args={[pw, ph]} />
+        <meshBasicMaterial map={texture} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function Video({
+  el,
+  src,
+  audio,
+  onAspetto,
+  onClick,
+  onSopra,
+}: {
+  el: Elemento;
+  src: string;
+  audio: boolean;
+  onAspetto: (a: number) => void;
+  onClick: Clic;
+  onSopra: (s: boolean) => void;
+}) {
+  const [video] = useState(() => {
+    const v = document.createElement("video");
+    v.src = src;
+    v.loop = true;
+    v.muted = true;
+    v.playsInline = true;
+    v.setAttribute("playsinline", "");
+    v.preload = "auto";
+    return v;
+  });
+  const texture = useMemo(() => {
+    const t = new THREE.VideoTexture(video);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }, [video]);
+  const anteprima = useTexture(src.replace(/\.mp4$/, ".jpg"), (t) => {
+    (t as THREE.Texture).colorSpace = THREE.SRGBColorSpace;
+  }) as THREE.Texture;
+  const [scorre, setScorre] = useState(false);
+
+  useEffect(() => {
+    const meta = () => video.videoWidth && onAspetto(video.videoWidth / video.videoHeight);
+    const via = () => setScorre(true);
+    video.addEventListener("loadedmetadata", meta);
+    video.addEventListener("playing", via);
+    video.play().catch(() => {});
+    return () => {
+      video.removeEventListener("loadedmetadata", meta);
+      video.removeEventListener("playing", via);
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      texture.dispose();
+    };
+  }, [video, texture, onAspetto]);
+
+  useEffect(() => {
+    video.muted = !audio;
+    if (audio) video.play().catch(() => {});
+  }, [audio, video]);
+
+  const { position, rotation } = suParete(el.a, LATO - 0.02);
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[el.x, el.y, 0.01]}>
+        <planeGeometry args={[el.w + 0.14, el.h + 0.14]} />
+        <meshStandardMaterial color="#0b0c18" roughness={0.4} />
+      </mesh>
+      <mesh
+        position={[el.x, el.y, 0.02]}
+        onClick={onClick}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          onSopra(true);
+        }}
+        onPointerOut={() => onSopra(false)}
+      >
+        <planeGeometry args={[el.w, el.h]} />
+        <meshBasicMaterial map={scorre ? texture : anteprima} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function Testi({
+  opera,
+  imp,
+  tema,
+  onClick,
+  onSopra,
+}: {
+  opera: Opera;
+  imp: Impaginato;
+  tema: Tema;
+  onClick: (id: string) => Clic;
+  onSopra: (s: boolean) => void;
+}) {
+  const inchiostro = tema === "sala" ? "#efe8d8" : "#1e2240";
+  const tenue = tema === "sala" ? "#a9abc6" : "#5a5e7a";
+  const fondo = tema === "sala" ? "#171a33" : "#f6ecd8";
+  const { position, rotation } = suParete(PARETI[2], LATO - 0.02);
+
+  const t = imp.testo;
+  const larghezzaT = t.w - 2 * T.margine;
+  const sinistra = t.x - t.w / 2 + T.margine;
+  const cima = t.y + t.h / 2 - T.margine;
+  const corpoS = T.sinossi;
+  const hSinossi = altezzaTesto(opera.sinossi, corpoS, larghezzaT, 1.25);
+
+  const d = imp.dati;
+  const voci = vociDati(opera);
+  let yDati = d.y + d.h / 2 - T.margine;
+  const larghezzaD = d.w - 0.5;
+
+  const pannello = (el: Elemento) => (
+    <mesh
+      position={[el.x, el.y, 0.01]}
+      onClick={onClick(el.id)}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        onSopra(true);
+      }}
+      onPointerOut={() => onSopra(false)}
+    >
+      <planeGeometry args={[el.w, el.h]} />
+      <meshStandardMaterial color={fondo} roughness={0.9} />
+    </mesh>
+  );
+
+  return (
+    <group position={position} rotation={rotation}>
+      {pannello(t)}
+      <Text
+        font={FONT_TITOLI}
+        fontSize={corpoS}
+        lineHeight={1.25}
+        maxWidth={larghezzaT}
+        color={inchiostro}
+        anchorX="left"
+        anchorY="top"
+        position={[sinistra, cima, 0.02]}
+      >
+        {opera.sinossi}
+      </Text>
+      <Text
+        font={FONT_TESTO}
+        fontSize={T.testo}
+        lineHeight={1.5}
+        maxWidth={larghezzaT}
+        color={inchiostro}
+        anchorX="left"
+        anchorY="top"
+        position={[sinistra, cima - hSinossi - 0.22, 0.02]}
+      >
+        {opera.testo.join("\n\n")}
+      </Text>
+
+      {pannello(d)}
+      {voci.map(([etichetta, valore], i) => {
+        const y = yDati;
+        yDati -= altezzaVoce(valore, larghezzaD);
+        return (
+          <group key={i}>
+            <Text
+              font={FONT_TESTO}
+              fontSize={T.etichetta}
+              color={tenue}
+              anchorX="left"
+              anchorY="top"
+              position={[d.x - d.w / 2 + 0.25, y, 0.02]}
+            >
+              {etichetta}
+            </Text>
+            <Text
+              font={FONT_TESTO}
+              fontSize={T.valore}
+              lineHeight={1.35}
+              maxWidth={larghezzaD}
+              color={inchiostro}
+              anchorX="left"
+              anchorY="top"
+              position={[d.x - d.w / 2 + 0.25, y - T.etichetta * 1.5, 0.02]}
+            >
+              {valore}
+            </Text>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+function Uscita({
+  tema,
+  onEsci,
+  onScheda,
+  onSopra,
+}: {
+  tema: Tema;
+  onEsci: () => void;
+  onScheda: () => void;
+  onSopra: (s: boolean) => void;
+}) {
+  const { position, rotation } = suParete(PARETI[3], LATO - 0.02);
+  const sala = tema === "sala";
+  const cornice = sala ? "#1a1c33" : "#f4e7cf";
+  const inchiostro = sala ? "#efe8d8" : "#1e2240";
+  const hover = {
+    onPointerOver: (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      onSopra(true);
+    },
+    onPointerOut: () => onSopra(false),
+  };
+  return (
+    <group position={position} rotation={rotation}>
+      {/* porta verso l'atrio, socchiusa sulla luce */}
+      <mesh position={[0, 1.15, 0.005]}>
+        <planeGeometry args={[1.15, 2.3]} />
+        <meshBasicMaterial color={sala ? "#f3d9a4" : "#fff4dc"} toneMapped={false} />
+      </mesh>
+      {[-1, 1].map((l) => (
+        <mesh key={l} position={[0.635 * l, 1.2, 0.03]}>
+          <boxGeometry args={[0.12, 2.4, 0.16]} />
+          <meshStandardMaterial color={cornice} />
+        </mesh>
+      ))}
+      <mesh position={[0, 2.4, 0.03]}>
+        <boxGeometry args={[1.39, 0.12, 0.16]} />
+        <meshStandardMaterial color={cornice} />
+      </mesh>
+      <group position={[-0.575, 0, 0.04]} rotation={[0, 0.45, 0]}>
+        <mesh position={[0.575, 1.15, 0]}>
+          <boxGeometry args={[1.15, 2.3, 0.05]} />
+          <meshStandardMaterial color={sala ? "#3b3654" : "#2a5bb8"} roughness={0.55} />
+        </mesh>
+      </group>
+      <mesh position={[0, 1.2, 0.2]} onClick={cliccabile(onEsci)} {...hover}>
+        <planeGeometry args={[1.4, 2.5]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <Text font={FONT_TITOLI} fontSize={0.24} color={inchiostro} anchorX="center" anchorY="bottom" position={[0, 2.6, 0.05]}>
+        Torna nella stanza
+      </Text>
+
+      {/* targa: scheda completa nel sito */}
+      <group position={[2.4, 1.6, 0.02]}>
+        <mesh onClick={cliccabile(onScheda)} {...hover}>
+          <planeGeometry args={[1.7, 0.8]} />
+          <meshStandardMaterial color="#e0362b" roughness={0.5} />
+        </mesh>
+        <Text
+          font={FONT_TITOLI}
+          fontSize={0.13}
+          maxWidth={1.45}
+          textAlign="center"
+          lineHeight={1.2}
+          color="#fff6ea"
+          anchorX="center"
+          anchorY="middle"
+          position={[0, 0, 0.01]}
+        >
+          {"Scheda completa\ne contatti"}
+        </Text>
+      </group>
+    </group>
+  );
+}
+
+function Faro({ a, y }: { a: number; y: number }) {
+  const luce = useRef<THREE.SpotLight>(null);
+  const bersaglio = useMemo(() => {
+    const o = new THREE.Object3D();
+    o.position.set(Math.sin(a) * LATO, y, -Math.cos(a) * LATO);
+    return o;
+  }, [a, y]);
+  useEffect(() => {
+    if (luce.current) luce.current.target = bersaglio;
+  }, [bersaglio]);
+  return (
+    <>
+      <primitive object={bersaglio} />
+      <spotLight
+        ref={luce}
+        position={[Math.sin(a) * 1.2, ALTEZZA - 0.2, -Math.cos(a) * 1.2]}
+        angle={0.62}
+        penumbra={0.8}
+        intensity={55}
+        color="#ffe6b8"
+        decay={1.6}
+      />
+    </>
+  );
+}
+
+function Ambiente({ tema }: { tema: Tema }) {
+  const strisce = useStrisce("#c8322a", "#f4e7cf", 14);
+  const sala = tema === "sala";
+  const angoli: [number, number, number][] = [
+    [-LATO + 0.1, ALTEZZA - 0.08, -LATO + 0.1],
+    [LATO - 0.1, ALTEZZA - 0.08, -LATO + 0.1],
+    [LATO - 0.1, ALTEZZA - 0.08, LATO - 0.1],
+    [-LATO + 0.1, ALTEZZA - 0.08, LATO - 0.1],
+  ];
+  return (
+    <group>
+      {sala ? (
+        <>
+          <ambientLight intensity={0.55} color="#b9bde8" />
+          <hemisphereLight args={["#8b90c8", "#1a1424", 0.55]} />
+          {PARETI.map((a, i) => (
+            <Faro key={i} a={a} y={2.2} />
+          ))}
+        </>
+      ) : (
+        <>
+          <ambientLight intensity={0.95} color="#fff0d8" />
+          <hemisphereLight args={["#ffe9c7", "#8a3a22", 1.2]} />
+          <pointLight position={[0, ALTEZZA - 0.3, 0]} intensity={45} color="#ffd9a0" decay={1.6} />
+        </>
+      )}
+      {PARETI.map((a, i) => {
+        const { position, rotation } = suParete(a, LATO);
+        return (
+          <mesh key={i} position={[position[0], ALTEZZA / 2, position[2]]} rotation={rotation}>
+            <planeGeometry args={[LATO * 2, ALTEZZA]} />
+            {sala ? (
+              <meshStandardMaterial color="#2b3056" roughness={0.95} />
+            ) : (
+              <meshStandardMaterial map={strisce} roughness={0.9} />
+            )}
+          </mesh>
+        );
+      })}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[LATO * 2, LATO * 2]} />
+        <meshStandardMaterial color={sala ? "#2a2431" : "#d8bb8b"} roughness={sala ? 0.75 : 1} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, ALTEZZA, 0]}>
+        <planeGeometry args={[LATO * 2, LATO * 2]} />
+        <meshStandardMaterial color={sala ? "#14172d" : "#f4e7cf"} roughness={1} />
+      </mesh>
+      {!sala ? (
+        <>
+          {angoli.map((p, i) => (
+            <Festone key={i} da={p} a={angoli[(i + 1) % 4]} cala={0.3} bandiere={16} />
+          ))}
+          {angoli.map((p, i) => (
+            <Festone key={`x${i}`} da={p} a={[0, ALTEZZA - 0.02, 0]} cala={0.2} bandiere={10} />
+          ))}
+        </>
+      ) : null}
+    </group>
+  );
+}
+
+function Immagini({
+  imp,
+  tema,
+  onElemento,
+  onSopra,
+}: {
+  imp: Impaginato;
+  tema: Tema;
+  onElemento: (id: string) => void;
+  onSopra: (s: boolean) => void;
+}) {
+  const urls = useMemo(
+    () => [...imp.foto.map((f) => f.media.src!), ...(imp.mediaImmagine?.src ? [imp.mediaImmagine.src] : [])],
+    [imp],
+  );
+  const textures = useTexture(urls, (t) => {
+    (Array.isArray(t) ? t : [t]).forEach((x) => {
+      x.colorSpace = THREE.SRGBColorSpace;
+      x.anisotropy = 4;
+    });
+  }) as THREE.Texture[];
+  return (
+    <>
+      {imp.mediaImmagine ? (
+        <Quadro
+          el={imp.media}
+          texture={textures[textures.length - 1]}
+          tema={tema}
+          onClick={cliccabile(() => onElemento("media"))}
+          onSopra={onSopra}
+        />
+      ) : null}
+      {imp.foto.map((f, i) => (
+        <Quadro
+          key={f.id}
+          el={f}
+          texture={textures[i]}
+          tema={tema}
+          onClick={cliccabile(() => onElemento(f.id))}
+          onSopra={onSopra}
+        />
+      ))}
+    </>
+  );
+}
+
+/* ---------- Sala ---------- */
+
+export function SalaOpera({
+  opera,
+  imp,
+  tema,
+  fuoco,
+  onElemento,
+  onEsci,
+  onScheda,
+  onAspettoVideo,
+  onSopra,
+}: {
+  opera: Opera;
+  imp: Impaginato;
+  tema: Tema;
+  fuoco: string | null;
+  onElemento: (id: string) => void;
+  onEsci: () => void;
+  onScheda: () => void;
+  onAspettoVideo: (a: number) => void;
+  onSopra: (s: boolean) => void;
+}) {
+  const inchiostro = tema === "sala" ? "#efe8d8" : "#1e2240";
+  const fronte = suParete(PARETI[0], LATO - 0.02);
+  const sottotitolo = `${opera.sottotitolo}${opera.anno ? `, ${opera.anno}` : ""}`;
+
+  return (
+    <>
+      <color attach="background" args={[tema === "sala" ? "#0e1024" : "#2a1410"]} />
+      <Ambiente key={tema} tema={tema} />
+
+      {/* parete 0: titolo e video o copertina */}
+      <group position={fronte.position} rotation={fronte.rotation}>
+        {tema === "circo" ? (
+          <mesh position={[0, 3.6, 0.01]}>
+            <planeGeometry args={[Math.min(10.4, opera.titolo.length * 0.3 + 1.4), 1.05]} />
+            <meshStandardMaterial color="#f6ecd8" roughness={0.9} />
+          </mesh>
+        ) : null}
+        <Text font={FONT_TITOLI} fontSize={0.52} color={inchiostro} anchorX="center" anchorY="middle" position={[0, 3.78, 0.03]}>
+          {opera.titolo}
+        </Text>
+        <Text font={FONT_TESTO} fontSize={0.16} color={inchiostro} anchorX="center" anchorY="middle" position={[0, 3.3, 0.03]}>
+          {sottotitolo}
+        </Text>
+        {opera.teaser ? (
+          <Text
+            font={FONT_TESTO}
+            fontSize={0.1}
+            color={inchiostro}
+            anchorX="center"
+            anchorY="top"
+            position={[0, imp.media.y - imp.media.h / 2 - 0.12, 0.03]}
+          >
+            {fuoco === "media" ? "Audio attivo. Tocca il video per allontanarti" : "Tocca il video per avvicinarti e attivare l'audio"}
+          </Text>
+        ) : null}
+      </group>
+      {opera.teaser ? (
+        <Video
+          el={imp.media}
+          src={opera.teaser}
+          audio={fuoco === "media"}
+          onAspetto={onAspettoVideo}
+          onClick={cliccabile(() => onElemento("media"))}
+          onSopra={onSopra}
+        />
+      ) : null}
+
+      {/* parete 1: foto (e copertina sulla parete 0 quando non c'è video) */}
+      {imp.foto.length > 0 || imp.mediaImmagine ? (
+        <Suspense fallback={null}>
+          <Immagini imp={imp} tema={tema} onElemento={onElemento} onSopra={onSopra} />
+        </Suspense>
+      ) : null}
+      {imp.foto.length === 0 ? (
+        <group {...suParete(PARETI[1], LATO - 0.02)}>
+          <Text font={FONT_TITOLI} fontSize={0.3} color={inchiostro} anchorX="center" position={[0, 2.4, 0.03]}>
+            Foto in arrivo
+          </Text>
+        </group>
+      ) : null}
+
+      {/* parete 2: testi */}
+      <Testi opera={opera} imp={imp} tema={tema} onClick={(id) => cliccabile(() => onElemento(id))} onSopra={onSopra} />
+
+      {/* parete 3: uscita */}
+      <Uscita tema={tema} onEsci={onEsci} onScheda={onScheda} onSopra={onSopra} />
+    </>
+  );
+}

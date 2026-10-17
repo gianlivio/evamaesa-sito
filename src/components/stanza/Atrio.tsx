@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
-import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
-
-export type Tema = "sala" | "circo";
+import { FONT_TITOLI as FONT, coloriCirco, smorza, suParete, useStrisce, type Tema } from "./comune";
+import { Clown, Festone, Palloncino, Podio, Stella, compagnia } from "./Circo";
 
 export type Porta = {
   slug: string;
@@ -17,156 +17,87 @@ export type Porta = {
 
 /* ---------- Misure (metri) ---------- */
 
-const R = 6; // raggio della stanza
+export const R = 6; // raggio dell'atrio
 const H = 4.4; // altezza delle pareti
-const OCCHI = 1.6; // altezza della camera
 const LP = 1.15; // larghezza porta
 const HP = 2.3; // altezza porta
-const FONT = "/fonts/gloock.woff";
-
-const coloriCirco = ["#d8342b", "#2a5bb8", "#f2b632", "#2f8f5b", "#7a3fa0", "#e46a1f"];
 
 /** Angolo dello slot i su `totale` slot; 0 è davanti alla camera iniziale. */
 export function angoloSlot(i: number, totale: number) {
   return (i / totale) * Math.PI * 2;
 }
 
-/** Posizione e rotazione di un oggetto appoggiato alla parete all'angolo a. */
-function suParete(a: number, r: number) {
-  return {
-    position: [Math.sin(a) * r, 0, -Math.cos(a) * r] as [number, number, number],
-    rotation: [0, -a, 0] as [number, number, number],
-  };
-}
-
-function smorza(attuale: number, obiettivo: number, velocita: number, dt: number, ridotto: boolean) {
-  return ridotto ? obiettivo : THREE.MathUtils.damp(attuale, obiettivo, velocita, dt);
-}
-
-/* ---------- Camera ---------- */
-
-function Regia({
-  yaw,
-  totale,
-  bersaglio,
-  ridotto,
-  onFuoco,
-}: {
-  yaw: MutableRefObject<number>;
-  totale: number;
-  bersaglio: number | null; // angolo della porta in cui si entra
-  ridotto: boolean;
-  onFuoco: (indice: number) => void;
-}) {
-  const { camera } = useThree();
-  const attuale = useRef(yaw.current);
-  const ultimoFuoco = useRef(-1);
-
-  useFrame((_, dt) => {
-    attuale.current = smorza(attuale.current, yaw.current, 5, dt, ridotto);
-    camera.rotation.set(-0.04, attuale.current, 0, "YXZ");
-
-    const dentro = bersaglio !== null ? R * 0.62 : 0;
-    const a = bersaglio ?? 0;
-    camera.position.x = smorza(camera.position.x, Math.sin(a) * dentro, 2.2, dt, ridotto);
-    camera.position.z = smorza(camera.position.z, -Math.cos(a) * dentro, 2.2, dt, ridotto);
-    camera.position.y = OCCHI;
-
-    const passo = (Math.PI * 2) / totale;
-    const indice = ((Math.round(-attuale.current / passo) % totale) + totale) % totale;
-    if (indice !== ultimoFuoco.current) {
-      ultimoFuoco.current = indice;
-      onFuoco(indice);
-    }
-  });
-  return null;
-}
-
 /* ---------- Ambiente ---------- */
 
-function useStrisce() {
-  return useMemo(() => {
-    const c = document.createElement("canvas");
-    c.width = 1024;
-    c.height = 4;
-    const g = c.getContext("2d")!;
-    const n = 36;
-    for (let i = 0; i < n; i++) {
-      g.fillStyle = i % 2 ? "#f4e7cf" : "#c8322a";
-      g.fillRect((i * c.width) / n, 0, c.width / n + 1, c.height);
-    }
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.wrapS = THREE.RepeatWrapping;
-    t.anisotropy = 4;
-    return t;
-  }, []);
-}
-
-function Palline({ ridotto }: { ridotto: boolean }) {
-  const gruppo = useRef<THREE.Group>(null);
-  const palline = useMemo(
-    () =>
-      Array.from({ length: 7 }, (_, i) => ({
-        a: (i / 7) * Math.PI * 2 + 0.3,
-        r: 2.6 + (i % 3) * 0.4,
-        y: 3.0 + (i % 4) * 0.22,
-        colore: coloriCirco[i % coloriCirco.length],
-        fase: i * 1.3,
-      })),
-    [],
-  );
-  useFrame(({ clock }) => {
-    if (!gruppo.current || ridotto) return;
-    const t = clock.getElapsedTime();
-    gruppo.current.children.forEach((m, i) => {
-      const p = palline[i];
-      m.position.y = p.y + Math.sin(t * 1.4 + p.fase) * 0.25;
-    });
+function CircoAtrio({ totale, ridotto }: { totale: number; ridotto: boolean }) {
+  const strisce = useStrisce("#c8322a", "#f4e7cf", 18);
+  const apice: [number, number, number] = [0, H + 2.7, 0];
+  // festoni: a raggiera dal colmo del tendone e a ghirlanda lungo la parete
+  const raggiera = Array.from({ length: totale * 2 }, (_, i) => {
+    const t = ((i + 0.5) / (totale * 2)) * Math.PI * 2;
+    return [Math.sin(t) * (R - 0.15), H - 0.05, -Math.cos(t) * (R - 0.15)] as [number, number, number];
   });
+  const ghirlanda = Array.from({ length: totale * 4 }, (_, i) => {
+    const t = (i / (totale * 4)) * Math.PI * 2;
+    return [Math.sin(t) * (R - 0.2), H - 0.35, -Math.cos(t) * (R - 0.2)] as [number, number, number];
+  });
+  // tra una porta e l'altra: un podio con i palloncini
+  const intermedi = Array.from({ length: totale }, (_, i) => ((i + 0.5) / totale) * Math.PI * 2);
+
   return (
-    <group ref={gruppo}>
-      {palline.map((p, i) => (
-        <mesh key={i} position={[Math.sin(p.a) * p.r, p.y, -Math.cos(p.a) * p.r]}>
-          <sphereGeometry args={[0.16, 24, 16]} />
-          <meshStandardMaterial color={p.colore} roughness={0.35} />
-        </mesh>
+    <group>
+      <ambientLight intensity={0.75} color="#fff0d8" />
+      <hemisphereLight args={["#ffe9c7", "#8a3a22", 1.3]} />
+      <pointLight position={[0, H + 1.5, 0]} intensity={60} color="#ffd9a0" decay={1.6} />
+      <mesh position={[0, H / 2, 0]}>
+        <cylinderGeometry args={[R, R, H, 96, 1, true]} />
+        <meshStandardMaterial map={strisce} side={THREE.BackSide} roughness={0.9} />
+      </mesh>
+      <mesh position={[0, H + 1.35, 0]}>
+        <coneGeometry args={[R, 2.7, 96, 1, true]} />
+        <meshStandardMaterial map={strisce} side={THREE.BackSide} roughness={0.9} />
+      </mesh>
+      {/* pista di segatura con il bordo rosso e la stella */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[R, 96]} />
+        <meshStandardMaterial color="#d8bb8b" roughness={1} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
+        <circleGeometry args={[2.7, 64]} />
+        <meshStandardMaterial color="#c99a5b" roughness={1} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
+        <torusGeometry args={[2.7, 0.11, 12, 96]} />
+        <meshStandardMaterial color="#c8322a" roughness={0.5} />
+      </mesh>
+      <Stella raggio={1.1} />
+      {raggiera.map((p, i) => (
+        <Festone key={`r${i}`} da={apice} a={p} cala={0.35} bandiere={14} />
+      ))}
+      {ghirlanda.map((p, i) => (
+        <Festone key={`g${i}`} da={p} a={ghirlanda[(i + 1) % ghirlanda.length]} cala={0.25} bandiere={5} />
+      ))}
+      {intermedi.map((t, i) => {
+        const x = Math.sin(t) * (R - 0.9);
+        const z = -Math.cos(t) * (R - 0.9);
+        return (
+          <group key={`p${i}`}>
+            <Podio posizione={[x, 0, z]} />
+            <Palloncino posizione={[x - 0.12, 0.62, z]} colore={coloriCirco[i % 6]} filo={1.1} fase={i} ridotto={ridotto} />
+            <Palloncino posizione={[x + 0.1, 0.62, z + 0.08]} colore={coloriCirco[(i + 2) % 6]} filo={1.35} fase={i + 1.7} ridotto={ridotto} />
+            <Palloncino posizione={[x, 0.62, z - 0.1]} colore={coloriCirco[(i + 4) % 6]} filo={0.95} fase={i + 3.1} ridotto={ridotto} />
+          </group>
+        );
+      })}
+      {compagnia.map((c, i) => (
+        <Clown key={i} {...c} ridotto={ridotto} />
       ))}
     </group>
   );
 }
 
-function Ambiente({ tema, ridotto }: { tema: Tema; ridotto: boolean }) {
-  const strisce = useStrisce();
-
-  // i due ambienti hanno chiavi diverse: al cambio di tema si rimontano da zero
-  if (tema === "circo") {
-    return (
-      <group key="circo">
-        <ambientLight intensity={0.7} color="#fff0d8" />
-        <hemisphereLight args={["#ffe9c7", "#8a3a22", 1.4]} />
-        <pointLight position={[0, H - 0.4, 0]} intensity={35} color="#ffd9a0" />
-        <mesh position={[0, H / 2, 0]}>
-          <cylinderGeometry args={[R, R, H, 96, 1, true]} />
-          <meshStandardMaterial map={strisce} side={THREE.BackSide} roughness={0.9} />
-        </mesh>
-        <mesh position={[0, H + 1.6, 0]}>
-          <coneGeometry args={[R, 3.2, 96, 1, true]} />
-          <meshStandardMaterial map={strisce} side={THREE.BackSide} roughness={0.9} />
-        </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[R, 96]} />
-          <meshStandardMaterial color="#d6b98a" roughness={1} />
-        </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.12, 0]}>
-          <torusGeometry args={[2.7, 0.12, 12, 96]} />
-          <meshStandardMaterial color="#c8322a" roughness={0.6} />
-        </mesh>
-        <Palline ridotto={ridotto} />
-      </group>
-    );
-  }
-
+function Ambiente({ tema, totale, ridotto }: { tema: Tema; totale: number; ridotto: boolean }) {
+  if (tema === "circo") return <CircoAtrio totale={totale} ridotto={ridotto} />;
   return (
     <group key="sala">
       <ambientLight intensity={0.6} color="#b9bde8" />
@@ -444,42 +375,35 @@ function Leva({
   );
 }
 
-/* ---------- Scena ---------- */
+/* ---------- Atrio ---------- */
 
-export function Scena({
+export function Atrio({
   porte,
   tema,
-  yaw,
   sopra,
   scelta,
   inConferma,
   ridotto,
   onSopra,
-  onFuoco,
   onApri,
   onLeva,
 }: {
   porte: Porta[];
   tema: Tema;
-  yaw: MutableRefObject<number>;
   sopra: string | null;
   scelta: string | null;
   inConferma: string | null;
   ridotto: boolean;
   onSopra: (chi: string | null) => void;
-  onFuoco: (indice: number) => void;
   onApri: (indice: number) => void;
   onLeva: () => void;
 }) {
   const totale = porte.length + 1; // l'ultimo slot è l'interruttore
-  const indiceScelta = scelta ? porte.findIndex((p) => p.slug === scelta) : -1;
-  const bersaglio = indiceScelta >= 0 ? angoloSlot(indiceScelta, totale) : null;
 
   return (
     <>
-      <Regia yaw={yaw} totale={totale} bersaglio={bersaglio} ridotto={ridotto} onFuoco={onFuoco} />
       <color attach="background" args={[tema === "sala" ? "#0e1024" : "#2a1410"]} />
-      <Ambiente tema={tema} ridotto={ridotto} />
+      <Ambiente tema={tema} totale={totale} ridotto={ridotto} />
       {porte.map((p, i) => {
         const a = angoloSlot(i, totale);
         const stato: StatoPorta =

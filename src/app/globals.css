@@ -528,6 +528,8 @@ fieldset.campo { border: 0; padding: 0; margin: 0; }
 }
 .stanza-apri:disabled { opacity: 0.5; cursor: default; }
 
+.stanza-uscite { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+
 .stanza-esci {
   display: inline-flex; align-items: center; gap: 0.45rem;
   padding: 0.5rem 1.1rem 0.5rem 0.8rem; text-decoration: none; font-size: var(--t-s);

@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Canvas } from "@react-three/fiber";
-import { Scena, type Porta, type Tema } from "./Scena";
+import * as THREE from "three";
+import type { Opera } from "@/content/tipi";
+import { Atrio, R, angoloSlot, type Porta } from "./Atrio";
+import { SalaOpera, LATO, NOMI_PARETI, PARETI, impagina } from "./SalaOpera";
+import { Regia } from "./Regia";
+import { OCCHI, fuocoSu, type Tema } from "./comune";
 
 function useMovimentoRidotto() {
   const [ridotto, setRidotto] = useState(false);
@@ -18,35 +23,84 @@ function useMovimentoRidotto() {
   return ridotto;
 }
 
-export default function Stanza({ porte }: { porte: Porta[] }) {
+function useAspetto() {
+  const [aspetto, setAspetto] = useState(16 / 9);
+  useEffect(() => {
+    const f = () => setAspetto(window.innerWidth / window.innerHeight);
+    f();
+    window.addEventListener("resize", f);
+    return () => window.removeEventListener("resize", f);
+  }, []);
+  return aspetto;
+}
+
+const CENTRO = new THREE.Vector3(0, OCCHI, 0);
+
+export default function Stanza({ opere }: { opere: Opera[] }) {
   const router = useRouter();
   const ridotto = useMovimentoRidotto();
-  const totale = porte.length + 1;
-  const passo = (Math.PI * 2) / totale;
+  const aspetto = useAspetto();
+
+  const porte: Porta[] = useMemo(
+    () => opere.map(({ slug, titolo, sottotitolo, anno, pubblicoAdulto }) => ({ slug, titolo, sottotitolo, anno, pubblicoAdulto })),
+    [opere],
+  );
+  const totaleAtrio = porte.length + 1;
 
   const yaw = useRef(0);
+  const [modo, setModo] = useState<"atrio" | "opera">("atrio");
+  const [slugAperta, setSlugAperta] = useState<string | null>(null);
   const [tema, setTema] = useState<Tema>("sala");
   const [buio, setBuio] = useState(false);
   const [sopra, setSopra] = useState<string | null>(null);
-  const [fuoco, setFuoco] = useState(0);
+  const [settore, setSettore] = useState(0);
   const [scelta, setScelta] = useState<string | null>(null);
   const [conferma, setConferma] = useState<string | null>(null);
+  const [fuocoId, setFuocoId] = useState<string | null>(null);
+  const [aspettoVideo, setAspettoVideo] = useState(352 / 640);
+  const [scatto, setScatto] = useState(0);
   const [trascinato, setTrascinato] = useState(false);
   const entra = useRef<HTMLButtonElement>(null);
+
+  const opera = useMemo(() => opere.find((o) => o.slug === slugAperta) ?? null, [opere, slugAperta]);
+  const imp = useMemo(() => (opera ? impagina(opera, aspettoVideo) : null), [opera, aspettoVideo]);
+  const settori = modo === "atrio" ? totaleAtrio : 4;
+  const passo = (Math.PI * 2) / settori;
+
+  /* ---- camera ---- */
+
+  const base = useMemo(() => {
+    if (modo === "atrio" && scelta) {
+      const a = angoloSlot(
+        porte.findIndex((p) => p.slug === scelta),
+        totaleAtrio,
+      );
+      return new THREE.Vector3(Math.sin(a) * R * 0.62, OCCHI, -Math.cos(a) * R * 0.62);
+    }
+    return CENTRO;
+  }, [modo, scelta, porte, totaleAtrio]);
+
+  const elementi = useMemo(() => (imp ? [imp.media, imp.testo, imp.dati, ...imp.foto] : []), [imp]);
+  const fuoco = useMemo(() => {
+    if (modo !== "opera" || !fuocoId) return null;
+    const el = elementi.find((x) => x.id === fuocoId);
+    return el ? fuocoSu(el.a, LATO, el.x, el.y, el.w, el.h, aspetto) : null;
+  }, [modo, fuocoId, elementi, aspetto]);
 
   /* ---- sguardo ---- */
 
   const guarda = useCallback(
-    (indice: number) => {
-      // gira verso lo slot scegliendo il verso più breve
-      const corrente = Math.round(-yaw.current / passo);
-      const base = ((corrente % totale) + totale) % totale;
+    (indice: number, n: number) => {
+      // gira verso il settore scegliendo il verso più breve
+      const p = (Math.PI * 2) / n;
+      const corrente = Math.round(-yaw.current / p);
+      const base = ((corrente % n) + n) % n;
       let delta = indice - base;
-      if (delta > totale / 2) delta -= totale;
-      if (delta < -totale / 2) delta += totale;
-      yaw.current = -(corrente + delta) * passo;
+      if (delta > n / 2) delta -= n;
+      if (delta < -n / 2) delta += n;
+      yaw.current = -(corrente + delta) * p;
     },
-    [passo, totale],
+    [],
   );
 
   const ruota = useCallback(
@@ -58,31 +112,72 @@ export default function Stanza({ porte }: { porte: Porta[] }) {
     [passo],
   );
 
-  /* ---- azioni ---- */
+  /* ---- transizioni ---- */
+
+  const nelBuio = useCallback(
+    (fai: () => void) => {
+      if (ridotto) {
+        fai();
+        return;
+      }
+      setBuio(true);
+      window.setTimeout(() => {
+        fai();
+        window.setTimeout(() => setBuio(false), 90);
+      }, 300);
+    },
+    [ridotto],
+  );
 
   const cambiaTema = useCallback(() => {
-    const nuovo: Tema = tema === "sala" ? "circo" : "sala";
-    if (ridotto) {
-      setTema(nuovo);
-      return;
-    }
-    setBuio(true);
-    window.setTimeout(() => {
-      setTema(nuovo);
-      window.setTimeout(() => setBuio(false), 60);
-    }, 260);
-  }, [tema, ridotto]);
+    nelBuio(() => setTema((t) => (t === "sala" ? "circo" : "sala")));
+  }, [nelBuio]);
+
+  const aggiornaUrl = (slug: string | null) => {
+    const url = slug ? `${window.location.pathname}?opera=${slug}` : window.location.pathname;
+    window.history.replaceState(null, "", url);
+  };
+
+  const entraInSala = useCallback(
+    (slug: string) => {
+      nelBuio(() => {
+        setModo("opera");
+        setSlugAperta(slug);
+        setScelta(null);
+        setFuocoId(null);
+        yaw.current = 0;
+        setScatto((s) => s + 1);
+        aggiornaUrl(slug);
+      });
+    },
+    [nelBuio],
+  );
 
   const varca = useCallback(
     (slug: string) => {
-      const adulto = porte.find((p) => p.slug === slug)?.pubblicoAdulto;
       setConferma(null);
       setScelta(slug);
-      const dest = `/opere/${slug}${adulto ? "?immagini=1" : ""}`;
-      window.setTimeout(() => router.push(dest), ridotto ? 0 : 1100);
+      window.setTimeout(() => entraInSala(slug), ridotto ? 0 : 950);
     },
-    [router, ridotto, porte],
+    [entraInSala, ridotto],
   );
+
+  const esci = useCallback(() => {
+    const i = porte.findIndex((p) => p.slug === slugAperta);
+    nelBuio(() => {
+      setModo("atrio");
+      setSlugAperta(null);
+      setFuocoId(null);
+      yaw.current = -angoloSlot(Math.max(0, i), totaleAtrio);
+      setScatto((s) => s + 1);
+      aggiornaUrl(null);
+    });
+  }, [nelBuio, porte, slugAperta, totaleAtrio]);
+
+  const apriScheda = useCallback(() => {
+    if (!opera) return;
+    router.push(`/opere/${opera.slug}${opera.pubblicoAdulto ? "?immagini=1" : ""}`);
+  }, [opera, router]);
 
   const apri = useCallback(
     (indice: number) => {
@@ -92,16 +187,54 @@ export default function Stanza({ porte }: { porte: Porta[] }) {
         return;
       }
       const p = porte[indice];
-      guarda(indice);
+      guarda(indice, totaleAtrio);
       if (p.pubblicoAdulto) setConferma(p.slug);
       else varca(p.slug);
     },
-    [porte, scelta, guarda, cambiaTema, varca],
+    [porte, scelta, guarda, cambiaTema, varca, totaleAtrio],
   );
+
+  const metti = useCallback(
+    (id: string | null) => {
+      if (!id) {
+        setFuocoId(null);
+        return;
+      }
+      const el = elementi.find((x) => x.id === id);
+      if (el) guarda(PARETI.indexOf(el.a), 4);
+      setFuocoId((corrente) => (corrente === id ? null : id));
+      setTrascinato(true);
+    },
+    [elementi, guarda],
+  );
+
+  // apertura diretta da un link /stanza?opera=...
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("opera");
+    const p = porte.find((x) => x.slug === slug);
+    if (!p) return;
+    guarda(porte.indexOf(p), totaleAtrio);
+    if (p.pubblicoAdulto) setConferma(p.slug);
+    else entraInSala(p.slug);
+    // solo al primo caricamento
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (conferma) entra.current?.focus();
   }, [conferma]);
+
+  /* ---- foto ---- */
+
+  const indiceFoto = fuocoId?.startsWith("foto-") ? Number(fuocoId.slice(5)) : -1;
+  const nFoto = imp?.foto.length ?? 0;
+  const sfoglia = useCallback(
+    (verso: 1 | -1) => {
+      if (indiceFoto < 0 || !nFoto) return;
+      setFuocoId(`foto-${(indiceFoto + verso + nFoto) % nFoto}`);
+    },
+    [indiceFoto, nFoto],
+  );
 
   /* ---- tastiera ---- */
 
@@ -111,17 +244,23 @@ export default function Stanza({ porte }: { porte: Porta[] }) {
         if (e.key === "Escape") setConferma(null);
         return;
       }
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        ruota(-1);
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault();
-        ruota(1);
+      if (e.key === "Escape" && modo === "opera") {
+        if (fuocoId) setFuocoId(null);
+        else esci();
+        return;
+      }
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      const verso = e.key === "ArrowLeft" ? -1 : 1;
+      if (indiceFoto >= 0) sfoglia(verso);
+      else {
+        setFuocoId(null);
+        ruota(verso);
       }
     };
     window.addEventListener("keydown", f);
     return () => window.removeEventListener("keydown", f);
-  }, [conferma, ruota]);
+  }, [conferma, modo, fuocoId, esci, indiceFoto, sfoglia, ruota]);
 
   /* ---- trascinamento ---- */
 
@@ -131,7 +270,7 @@ export default function Stanza({ porte }: { porte: Porta[] }) {
   };
   const muovi = (e: React.PointerEvent) => {
     const t = trascina.current;
-    if (!t?.attivo || scelta) return;
+    if (!t?.attivo || scelta || fuocoId) return;
     const dx = e.clientX - t.x;
     t.x = e.clientX;
     yaw.current += dx * 0.0045;
@@ -141,8 +280,6 @@ export default function Stanza({ porte }: { porte: Porta[] }) {
     if (trascina.current) trascina.current.attivo = false;
   };
 
-  /* ---- cursore ---- */
-
   useEffect(() => {
     document.body.style.cursor = sopra ? "pointer" : "";
     return () => {
@@ -150,8 +287,88 @@ export default function Stanza({ porte }: { porte: Porta[] }) {
     };
   }, [sopra]);
 
-  const inFuoco = fuoco < porte.length ? porte[fuoco] : null;
+  /* ---- interfaccia ---- */
+
+  const portaInVista = modo === "atrio" && settore < porte.length ? porte[settore] : null;
   const operaConferma = porte.find((p) => p.slug === conferma);
+  const fotoInFuoco = indiceFoto >= 0 && imp ? imp.foto[indiceFoto] : null;
+
+  let didascalia: React.ReactNode;
+  if (modo === "atrio") {
+    didascalia = portaInVista ? (
+      <>
+        <strong>{portaInVista.titolo}</strong>
+        <span>
+          {portaInVista.sottotitolo}
+          {portaInVista.pubblicoAdulto ? ". Riservata a un pubblico adulto" : ""}
+        </span>
+        <button type="button" className="stanza-apri" onClick={() => apri(settore)} disabled={!!scelta}>
+          Apri la porta
+        </button>
+      </>
+    ) : (
+      <>
+        <strong>Interruttore</strong>
+        <span>Cambia la stanza tra sala e circo</span>
+        <button type="button" className="stanza-apri" onClick={cambiaTema}>
+          {tema === "sala" ? "Accendi il circo" : "Torna in sala"}
+        </button>
+      </>
+    );
+  } else if (opera && imp) {
+    if (fotoInFuoco) {
+      didascalia = (
+        <>
+          <strong>
+            Foto {indiceFoto + 1} di {nFoto}
+          </strong>
+          <span>
+            {fotoInFuoco.media.alt}
+            {fotoInFuoco.media.credito ? `. Foto di ${fotoInFuoco.media.credito}` : ""}
+          </span>
+          <button type="button" className="stanza-apri" onClick={() => setFuocoId(null)}>
+            Allontanati
+          </button>
+        </>
+      );
+    } else if (fuocoId) {
+      didascalia = (
+        <>
+          <strong>{opera.titolo}</strong>
+          <span>{fuocoId === "media" && opera.teaser ? "Video con audio" : "Lettura da vicino"}</span>
+          <button type="button" className="stanza-apri" onClick={() => setFuocoId(null)}>
+            Allontanati
+          </button>
+        </>
+      );
+    } else {
+      const azioni: [string, () => void][] = [
+        [opera.teaser ? "Guarda il video" : "Guarda da vicino", () => metti("media")],
+        ["Sfoglia le foto", () => metti("foto-0")],
+        ["Leggi", () => metti("testo")],
+        ["Scheda completa e contatti", apriScheda],
+      ];
+      const [etichetta, azione] = azioni[settore];
+      const disattivo = (settore === 1 && nFoto === 0) || (settore === 0 && !opera.teaser && !imp.mediaImmagine);
+      didascalia = (
+        <>
+          <strong>{opera.titolo}</strong>
+          <span>{NOMI_PARETI[settore]}</span>
+          <button type="button" className="stanza-apri" onClick={azione} disabled={disattivo}>
+            {etichetta}
+          </button>
+        </>
+      );
+    }
+  }
+
+  const frecce = (verso: 1 | -1) => () => {
+    if (indiceFoto >= 0) sfoglia(verso);
+    else {
+      setFuocoId(null);
+      ruota(verso);
+    }
+  };
 
   return (
     <div className={`stanza stanza-${tema}`}>
@@ -165,7 +382,7 @@ export default function Stanza({ porte }: { porte: Porta[] }) {
       >
         <Canvas
           dpr={[1, 1.75]}
-          camera={{ fov: 62, near: 0.05, far: 60, position: [0, 1.6, 0] }}
+          camera={{ fov: 62, near: 0.05, far: 60, position: [0, OCCHI, 0] }}
           gl={{ antialias: true }}
           aria-hidden="true"
           fallback={
@@ -175,28 +392,49 @@ export default function Stanza({ porte }: { porte: Porta[] }) {
             </div>
           }
         >
-          <Scena
-            porte={porte}
-            tema={tema}
+          <Regia
             yaw={yaw}
-            sopra={sopra}
-            scelta={scelta}
-            inConferma={conferma}
+            base={base}
+            fuoco={fuoco}
+            settori={settori}
+            scatto={scatto}
             ridotto={ridotto}
-            onSopra={setSopra}
-            onFuoco={setFuoco}
-            onApri={apri}
-            onLeva={cambiaTema}
+            onSettore={setSettore}
           />
+          <Suspense fallback={null}>
+            {modo === "atrio" ? (
+              <Atrio
+                porte={porte}
+                tema={tema}
+                sopra={sopra}
+                scelta={scelta}
+                inConferma={conferma}
+                ridotto={ridotto}
+                onSopra={setSopra}
+                onApri={apri}
+                onLeva={cambiaTema}
+              />
+            ) : opera && imp ? (
+              <SalaOpera
+                opera={opera}
+                imp={imp}
+                tema={tema}
+                fuoco={fuocoId}
+                onElemento={metti}
+                onEsci={esci}
+                onScheda={apriScheda}
+                onAspettoVideo={setAspettoVideo}
+                onSopra={(s) => setSopra(s ? "x" : null)}
+              />
+            ) : null}
+          </Suspense>
         </Canvas>
       </div>
 
       <div className={`stanza-buio${buio ? " attivo" : ""}`} aria-hidden="true" />
 
-      {/* ---- interfaccia sopra la scena ---- */}
-
       <header className="stanza-alto">
-        <h1>La stanza</h1>
+        <h1>{modo === "opera" && opera ? opera.titolo : "La stanza"}</h1>
         <button type="button" className="stanza-pillola" aria-pressed={tema === "circo"} onClick={cambiaTema}>
           {tema === "sala" ? "Accendi il circo" : "Torna in sala"}
         </button>
@@ -210,64 +448,56 @@ export default function Stanza({ porte }: { porte: Porta[] }) {
 
       <div className="stanza-basso">
         <div className="stanza-fuoco" aria-live="polite">
-          <button type="button" className="stanza-freccia" onClick={() => ruota(-1)} aria-label="Guarda a sinistra">
+          <button type="button" className="stanza-freccia" onClick={frecce(-1)} aria-label={indiceFoto >= 0 ? "Foto precedente" : "Guarda a sinistra"}>
             ‹
           </button>
-          <div className="stanza-didascalia">
-            {inFuoco ? (
-              <>
-                <strong>{inFuoco.titolo}</strong>
-                <span>
-                  {inFuoco.sottotitolo}
-                  {inFuoco.pubblicoAdulto ? ". Riservata a un pubblico adulto" : ""}
-                </span>
-                <button type="button" className="stanza-apri" onClick={() => apri(fuoco)} disabled={!!scelta}>
-                  Apri la porta
-                </button>
-              </>
-            ) : (
-              <>
-                <strong>Interruttore</strong>
-                <span>Cambia la stanza tra sala e circo</span>
-                <button type="button" className="stanza-apri" onClick={cambiaTema}>
-                  {tema === "sala" ? "Accendi il circo" : "Torna in sala"}
-                </button>
-              </>
-            )}
-          </div>
-          <button type="button" className="stanza-freccia" onClick={() => ruota(1)} aria-label="Guarda a destra">
+          <div className="stanza-didascalia">{didascalia}</div>
+          <button type="button" className="stanza-freccia" onClick={frecce(1)} aria-label={indiceFoto >= 0 ? "Foto successiva" : "Guarda a destra"}>
             ›
           </button>
         </div>
 
-        <Link href="/opere" className="stanza-esci">
-          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M12 4v15M5 12l7 7 7-7"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Torna al sito
-        </Link>
+        <div className="stanza-uscite">
+          {modo === "opera" ? (
+            <button type="button" className="stanza-esci" onClick={esci}>
+              Torna nella stanza
+            </button>
+          ) : null}
+          <Link href="/opere" className="stanza-esci">
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 4v15M5 12l7 7 7-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Torna al sito
+          </Link>
+        </div>
       </div>
 
-      {/* elenco delle porte per chi usa lettori di schermo */}
-      <nav className="sr-only" aria-label="Porte della stanza">
-        <ul>
-          {porte.map((p) => (
-            <li key={p.slug}>
-              <Link href={`/opere/${p.slug}`}>
-                {p.titolo}
-                {p.pubblicoAdulto ? ", riservata a un pubblico adulto" : ""}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {/* contenuti per chi usa lettori di schermo */}
+      <div className="sr-only">
+        {modo === "atrio" ? (
+          <nav aria-label="Porte della stanza">
+            <ul>
+              {porte.map((p) => (
+                <li key={p.slug}>
+                  <Link href={`/opere/${p.slug}`}>
+                    {p.titolo}
+                    {p.pubblicoAdulto ? ", riservata a un pubblico adulto" : ""}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : opera ? (
+          <article>
+            <h2>{opera.titolo}</h2>
+            <p>{opera.sinossi}</p>
+            {opera.testo.map((t, i) => (
+              <p key={i}>{t}</p>
+            ))}
+            <Link href={`/opere/${opera.slug}`}>Scheda completa</Link>
+          </article>
+        ) : null}
+      </div>
 
       {operaConferma ? (
         <div className="stanza-velo" role="dialog" aria-modal="true" aria-labelledby="conferma-titolo">

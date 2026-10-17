@@ -9,9 +9,6 @@ export const metadata: Metadata = {
 
 export default function PaginaStanza() {
   // stesso ordine dell'elenco opere
-  const porte = [...opere]
-    .sort((a, b) => (b.anno ?? 0) - (a.anno ?? 0))
-    .map(({ slug, titolo, sottotitolo, anno, pubblicoAdulto }) => ({ slug, titolo, sottotitolo, anno, pubblicoAdulto }));
-
-  return <Caricatore porte={porte} />;
+  const ordinate = [...opere].sort((a, b) => (b.anno ?? 0) - (a.anno ?? 0));
+  return <Caricatore opere={ordinate} />;
 }

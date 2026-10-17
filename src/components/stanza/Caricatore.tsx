@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { Porta } from "./Scena";
+import type { Opera } from "@/content/tipi";
 
 /* La scena (three.js) si scarica solo quando si entra nella stanza, mai nel resto del sito. */
 const Stanza = dynamic(() => import("./Stanza"), {
@@ -13,6 +13,6 @@ const Stanza = dynamic(() => import("./Stanza"), {
   ),
 });
 
-export function Caricatore({ porte }: { porte: Porta[] }) {
-  return <Stanza porte={porte} />;
+export function Caricatore({ opere }: { opere: Opera[] }) {
+  return <Stanza opere={opere} />;
 }
