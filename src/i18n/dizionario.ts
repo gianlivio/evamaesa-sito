@@ -34,7 +34,7 @@ const it = {
   },
   chiSono: {
     titolo: "Chi sono",
-    ritratto: "Eva Maesa che si prepara a salire sui trampoli",
+    ritratto: "Ritratto di Eva Maesa seduta, in giacca nera su fondo scuro",
     cv: "Scarica il curriculum (PDF)",
     percorso: "Percorso",
     ritratti: "Ritratti",
@@ -177,7 +177,7 @@ const en: Dizionario = {
   },
   chiSono: {
     titolo: "About",
-    ritratto: "Eva Maesa getting ready to climb onto her stilts",
+    ritratto: "Portrait of Eva Maesa seated, in a black jacket on a dark background",
     cv: "Download CV (PDF)",
     ritratti: "Portraits",
     percorso: "Background",
@@ -318,7 +318,7 @@ const fr: Dizionario = {
   },
   chiSono: {
     titolo: "À propos",
-    ritratto: "Eva Maesa se prépare à monter sur ses échasses",
+    ritratto: "Portrait d'Eva Maesa assise, veste noire sur fond sombre",
     cv: "Télécharger le CV (PDF)",
     ritratti: "Portraits",
     percorso: "Parcours",

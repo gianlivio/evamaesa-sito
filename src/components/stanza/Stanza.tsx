@@ -337,6 +337,8 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
 
   /* ---- interfaccia ---- */
 
+  // in sala le pareti sono 4; entrando da una porta oltre la quarta il settore dell'atrio resta per un istante fuori scala
+  const parete = settore < 4 ? settore : 0;
   const portaInVista = modo === "atrio" && settore < porte.length ? porte[settore] : null;
   const operaConferma = porte.find((p) => p.slug === conferma);
   const fotoInFuoco = indiceFoto >= 0 && imp ? imp.foto[indiceFoto] : null;
@@ -394,12 +396,12 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
         [t.azioni[3], () => metti("testo")],
         [t.azioni[4], apriScheda],
       ];
-      const [etichetta, azione] = azioni[settore];
-      const disattivo = (settore === 1 && nFoto === 0) || (settore === 0 && !opera.teaser && !opera.youtube && !imp.mediaImmagine);
+      const [etichetta, azione] = azioni[parete];
+      const disattivo = (parete === 1 && nFoto === 0) || (parete === 0 && !opera.teaser && !opera.youtube && !imp.mediaImmagine);
       didascalia = (
         <>
           <strong>{opera.titolo}</strong>
-          <span>{t.pareti[settore]}</span>
+          <span>{t.pareti[parete]}</span>
           <button type="button" className="stanza-apri" onClick={azione} disabled={disattivo}>
             {etichetta}
           </button>
@@ -474,7 +476,7 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
                 onAspettoVideo={setAspettoVideo}
                 onSopra={(s) => setSopra(s ? "x" : null)}
                 lingua={lingua}
-                paretaInVista={settore}
+                paretaInVista={parete}
               />
             ) : null}
           </Suspense>

@@ -10,8 +10,8 @@ const recapiti = {
   telefonoHref: "+393289032760",
   instagram: "https://www.instagram.com/evalelapena/",
   instagramNome: "evalelapena",
-  ritratto: "/media/eventi/07.jpg",
-  creditoRitratto: "Dante Farricella",
+  ritratto: "/media/ritratti/02.jpg",
+  creditoRitratto: "Emanuele Fabiano",
 };
 
 const testiProfilo: { discipline: Tr; presentazione: Tr; bio: Tr[]; zona: Tr } = {
@@ -246,11 +246,6 @@ const galleriaS: { src: string; alt: Tr; credito?: string }[] = [
 ];
 /* Ritratti per casting e stampa: crediti solo dove il fotografo è noto (dai dati dei file) */
 const ritrattiS: { src: string; alt: Tr; credito?: string; fuoco?: string }[] = [
-  {
-    src: "/media/ritratti/02.jpg",
-    alt: { it: "Ritratto di Eva Maesa seduta, in giacca nera su fondo scuro", en: "Portrait of Eva Maesa seated, in a black jacket on a dark background", fr: "Portrait d'Eva Maesa assise, veste noire sur fond sombre" },
-    credito: "Emanuele Fabiano",
-  },
   {
     src: "/media/ritratti/03.jpg",
     alt: { it: "Primo piano di Eva Maesa con la giacca sulla spalla, contro un muro chiaro", en: "Close-up of Eva Maesa with a jacket over her shoulder, against a pale wall", fr: "Gros plan d'Eva Maesa, veste sur l'épaule, contre un mur clair" },

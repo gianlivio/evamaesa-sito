@@ -77,44 +77,26 @@ function valzerCirco(): Brano {
   return { bpm: 168, battiti: 48, note, volume: 0.55 };
 }
 
-function marcettaSala(): Brano {
-  // marcetta allo xilofono in sol maggiore, 2/4, con basso "zum-pa" e legnetto
-  const giro = ["G", "G", "D", "D", "G", "G", "C", "D", "G", "G", "D", "D", "C", "D", "G", "G"];
-  const melodia: (string | null)[][] = [
-    ["D5", "G5", "B5", "G5"],
-    ["D6", null, "B5", null],
-    ["C6", "A5", "F#5", "A5"],
-    ["D6", null, "A5", null],
-    ["B5", "C6", "D6", "B5"],
-    ["G5", null, "D5", null],
-    ["E5", "G5", "C6", "E6"],
-    ["D6", "C6", "B5", "A5"],
-    ["D5", "G5", "B5", "G5"],
-    ["D6", null, "B5", null],
-    ["F#5", "A5", "D6", "F#6"],
-    ["E6", "D6", "C6", "A5"],
-    ["G5", "E5", "C6", "E5"],
-    ["F#5", "A5", "D6", "C6"],
-    ["B5", "D6", "G5", "B5"],
-    ["G5", null, null, null],
+function ambienteSala(): Brano {
+  // accordi lenti e qualche campana: un sottofondo tranquillo
+  const accordi = [
+    ["A2", "E3", "C4", "E4"],
+    ["F2", "C3", "A3", "E4"],
+    ["C3", "G3", "E4", "G4"],
+    ["G2", "D3", "B3", "D4"],
   ];
-  const accordi: Record<string, [string, string, string[]]> = {
-    G: ["G2", "D3", ["G4", "B4", "D5"]],
-    D: ["D2", "A2", ["F#4", "A4", "D5"]],
-    C: ["C3", "G2", ["E4", "G4", "C5"]],
-  };
   const note: Nota[] = [];
-  giro.forEach((c, bar) => {
-    const t = bar * 2;
-    const [r, q, acc] = accordi[c];
-    note.push([t, 0.4, r, "basso", 0.8], [t + 1, 0.4, q, "basso", 0.7]);
-    for (const k of [0.5, 1.5]) {
-      acc.forEach((n) => note.push([t + k, 0.3, n, "accordo", 0.16]));
-      note.push([t + k, 0.1, 0, "legnetto", 0.25]);
-    }
-    melodia[bar].forEach((n, i) => n && note.push([t + i * 0.5, 0.4, n, "xilofono", 0.55]));
-  });
-  return { bpm: 132, battiti: 32, note, volume: 0.55 };
+  accordi.forEach((acc, i) => acc.forEach((n) => note.push([i * 8, 8.6, n, "pad", 0.16])));
+  [
+    [2, "E5"],
+    [7, "A5"],
+    [13, "G5"],
+    [18, "C6"],
+    [23, "D5"],
+    [29, "E5"],
+    [30.5, "B5"],
+  ].forEach(([t, n]) => note.push([t as number, 4, n as string, "campana", 0.22]));
+  return { bpm: 60, battiti: 32, note, volume: 0.5 };
 }
 
 function giostraGorgoglio(): Brano {
@@ -189,7 +171,7 @@ function carillonGirandola(): Brano {
 }
 
 const BRANI: Record<NomeBrano, () => Brano> = {
-  "atrio-sala": marcettaSala,
+  "atrio-sala": ambienteSala,
   "atrio-circo": valzerCirco,
   "girandola-amen": carillonGirandola,
   gorgoglio: giostraGorgoglio,
