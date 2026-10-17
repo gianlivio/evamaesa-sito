@@ -3,12 +3,14 @@ import { Testata } from "@/components/Testata";
 import { Piede } from "@/components/Piede";
 import type { Lingua } from "@/i18n/lingue";
 import { dizionario } from "@/i18n/dizionario";
+import { DatiStrutturati, personaLd, sitoLd } from "./DatiStrutturati";
 
 /* Impaginato del sito minimale in una lingua. La stanza 3D ne resta fuori e occupa tutto lo schermo. */
 export function Sito({ lingua, children }: { lingua: Lingua; children: ReactNode }) {
   return (
     <div lang={lingua}>
       {lingua !== "it" ? <ImpostaLingua lingua={lingua} /> : null}
+      <DatiStrutturati dati={[sitoLd(lingua), personaLd(lingua)]} />
       <a href="#contenuto" className="salta">
         {dizionario(lingua).nav.salta}
       </a>

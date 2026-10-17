@@ -16,16 +16,21 @@ const recapiti = {
 
 const testiProfilo: { discipline: Tr; presentazione: Tr; bio: Tr[]; zona: Tr } = {
   discipline: {
-    it: "Clownesse, trampoliera, performer, poeta",
-    en: "Clown, stilt walker, performer, poet",
-    fr: "Clowne, échassière, performeuse, poète",
+    it: "Performer versatile: attrice, clownesse, trampoliera, poeta",
+    en: "Versatile performer: actress, clown, stilt walker, poet",
+    fr: "Performeuse polyvalente : comédienne, clowne, échassière, poète",
   },
   presentazione: {
-    it: "Teatro di strada, clown e teatrodanza. Spettacoli per piazze, feste e festival; performance di ricerca tra corpo, poesia e musica.",
-    en: "Street theatre, clowning and dance theatre. Shows for squares, parties and festivals; research performances between body, poetry and music.",
-    fr: "Théâtre de rue, clown et danse-théâtre. Spectacles pour places, fêtes et festivals ; performances de recherche entre corps, poésie et musique.",
+    it: "Ha basi solide nella recitazione e si cala in ogni ruolo, dal clown delle feste per bambini al teatro di strada, fino alla performance di ricerca tra corpo, poesia e musica. Lo fa per passione: per lei la vita stessa è una performance.",
+    en: "With solid acting foundations, she steps into any role, from the clown at a children's party to street theatre and research performance between body, poetry and music. She does it out of passion: for her, life itself is a performance.",
+    fr: "Forte d'une solide formation de comédienne, elle se glisse dans tous les rôles, du clown des fêtes d'enfants au théâtre de rue, jusqu'à la performance de recherche entre corps, poésie et musique. Elle le fait par passion : pour elle, la vie même est une performance.",
   },
   bio: [
+    {
+      it: "Eva Maesa è una performer: attrice di formazione, clownesse, trampoliera, poeta. Recita, gioca, danza e scrive con la stessa dedizione, e porta in scena ogni ruolo che le viene chiesto. Fa questo lavoro per passione, prima che per mestiere.",
+      en: "Eva Maesa is a performer: a trained actress, clown, stilt walker and poet. She acts, plays, dances and writes with the same dedication, and brings to the stage any role she is asked to play. She does this work out of passion before anything else.",
+      fr: "Eva Maesa est une performeuse : comédienne de formation, clowne, échassière, poète. Elle joue, s'amuse, danse et écrit avec la même passion, et porte sur scène tous les rôles qu'on lui confie. Elle fait ce métier par passion, avant tout.",
+    },
     {
       it: "Eva nasce a Foggia nel 1991 e si avvicina giovanissima al teatro. Continua tra Roma, Bologna e ovunque sia possibile, trasversale a ogni ambiente.",
       en: "Eva was born in Foggia in 1991 and started in theatre at a very young age. She went on in Rome, Bologna and wherever she could, across every kind of setting.",

@@ -4,9 +4,9 @@ import type { Lingua } from "./lingue";
 
 const it = {
   meta: {
-    titolo: "Eva Maesa, clownesse e performer",
+    titolo: "Eva Maesa, performer: attrice, clownesse, trampoliera",
     descrizione:
-      "Eva Maesa, alias MaEva: clown, trampoli, teatro di strada e teatrodanza. Animazione per feste ed eventi, spettacoli per piazze e festival, performance.",
+      "Eva Maesa è una performer versatile con una solida formazione d'attrice: clown, trampoli, teatro di strada e teatrodanza. Spettacoli e animazione per feste, eventi e festival nel Nord Italia e nel sud della Francia.",
     eventiDescr: "Animazione per feste di bambini, matrimoni, eventi aziendali e piazze: clown, trampoli, palloncini, truccabimbi, spettacoli.",
     opereDescr: "Spettacoli di strada, clown e performance di teatrodanza di Eva Maesa.",
     stanzaDescr: "Le opere di Eva Maesa in una stanza da esplorare: ogni porta è uno spettacolo o una performance.",
@@ -52,8 +52,7 @@ const it = {
   },
   opere: {
     titolo: "Opere",
-    intro:
-      "Spettacoli e performance di cui Eva è autrice. Le opere segnate con l’avviso contengono nudo e sono riservate a un pubblico adulto.",
+    intro: "Spettacoli e performance di cui Eva è autrice e interprete.",
     entra: "Entra nella stanza",
     elenco: "Elenco delle opere",
     adulto: "Pubblico adulto",
@@ -145,9 +144,9 @@ export type Dizionario = typeof it;
 
 const en: Dizionario = {
   meta: {
-    titolo: "Eva Maesa, clown and performer",
+    titolo: "Eva Maesa, performer: actress, clown, stilt walker",
     descrizione:
-      "Eva Maesa, aka MaEva: clowning, stilts, street theatre and dance theatre. Entertainment for parties and events, shows for squares and festivals, performances.",
+      "Eva Maesa is a versatile performer with solid acting training: clowning, stilts, street theatre and dance theatre. Shows and entertainment for parties, events and festivals in northern Italy and southern France.",
     eventiDescr: "Entertainment for children's parties, weddings, corporate events and town squares: clowning, stilts, balloons, face painting, shows.",
     opereDescr: "Street shows, clowning and dance-theatre performances by Eva Maesa.",
     stanzaDescr: "Eva Maesa's works in a room to explore: every door is a show or a performance.",
@@ -193,8 +192,7 @@ const en: Dizionario = {
   },
   opere: {
     titolo: "Works",
-    intro:
-      "Shows and performances created by Eva. Works marked with the notice contain nudity and are for adult audiences only.",
+    intro: "Shows and performances created and performed by Eva.",
     entra: "Enter the room",
     elenco: "List of works",
     adulto: "Adult audiences",
@@ -284,9 +282,9 @@ const en: Dizionario = {
 
 const fr: Dizionario = {
   meta: {
-    titolo: "Eva Maesa, clowne et performeuse",
+    titolo: "Eva Maesa, performeuse : comédienne, clowne, échassière",
     descrizione:
-      "Eva Maesa, alias MaEva : clown, échasses, théâtre de rue et danse-théâtre. Animation pour fêtes et événements, spectacles pour places et festivals, performances.",
+      "Eva Maesa est une performeuse polyvalente à la solide formation de comédienne : clown, échasses, théâtre de rue et danse-théâtre. Spectacles et animations pour fêtes, événements et festivals dans le nord de l'Italie et le sud de la France.",
     eventiDescr: "Animation pour anniversaires d'enfants, mariages, événements d'entreprise et places : clown, échasses, ballons, maquillage, spectacles.",
     opereDescr: "Spectacles de rue, clown et performances de danse-théâtre d'Eva Maesa.",
     stanzaDescr: "Les œuvres d'Eva Maesa dans une pièce à explorer : chaque porte est un spectacle ou une performance.",
@@ -332,8 +330,7 @@ const fr: Dizionario = {
   },
   opere: {
     titolo: "Œuvres",
-    intro:
-      "Spectacles et performances dont Eva est l'autrice. Les œuvres signalées par l'avertissement contiennent de la nudité et sont réservées à un public adulte.",
+    intro: "Spectacles et performances dont Eva est l'autrice et l'interprète.",
     entra: "Entrer dans la pièce",
     elenco: "Liste des œuvres",
     adulto: "Public adulte",

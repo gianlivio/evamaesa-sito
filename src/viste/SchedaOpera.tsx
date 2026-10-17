@@ -8,6 +8,7 @@ import { slugOpere, trovaOpera } from "@/content/opere";
 import { LOCALE, percorso, type Lingua } from "@/i18n/lingue";
 import { dizionario } from "@/i18n/dizionario";
 import { meta } from "./meta";
+import { DatiStrutturati, operaLd } from "./DatiStrutturati";
 
 export type ParametriOpera = { params: Promise<{ slug: string }> };
 
@@ -17,7 +18,7 @@ export async function metaOpera(lingua: Lingua, { params }: ParametriOpera): Pro
   const { slug } = await params;
   const o = trovaOpera(slug, lingua);
   if (!o) return {};
-  return meta(lingua, "opere", o.titolo, o.sinossi, slug);
+  return meta(lingua, "opere", o.titolo, o.sinossi, slug, o.copertina.src);
 }
 
 export async function SchedaOpera({ lingua, params }: { lingua: Lingua } & ParametriOpera) {
@@ -54,6 +55,7 @@ export async function SchedaOpera({ lingua, params }: { lingua: Lingua } & Param
 
   return (
     <article className="contenitore">
+      <DatiStrutturati dati={operaLd(o, lingua)} />
       <header className="apertura">
         <p className="tenue" style={{ marginBottom: "1rem" }}>
           <Link href={percorso(lingua, "opere")}>{dizionario(lingua).opere.titolo}</Link>

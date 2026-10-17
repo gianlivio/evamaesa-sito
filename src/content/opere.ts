@@ -90,13 +90,7 @@ const sorgente: OperaSorgente[] = [
       },
       { ruolo: { it: "Musiche", en: "Music", fr: "Musique" }, nome: "Francesca Valente, Filippo Poderini, Gianluca Lovreglio" },
     ],
-    // le foto di scena mostrano nudo parziale
-    pubblicoAdulto: true,
-    avviso: {
-      it: "Le immagini di questa performance contengono nudo e sono riservate a un pubblico adulto.",
-      en: "The images of this performance contain nudity and are for adult audiences only.",
-      fr: "Les images de cette performance contiennent de la nudité et sont réservées à un public adulte.",
-    },
+    pubblicoAdulto: false,
     ancheInEventi: false,
     copertina: g(1, "Il volto di Eva Maesa che affiora da un drappo rosso", "Eva Maesa's face emerging from a red drape", "Le visage d'Eva Maesa qui émerge d'un drapé rouge"),
     galleria: [
