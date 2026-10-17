@@ -26,6 +26,8 @@ type OperaSorgente = {
   copertina: MediaS;
   galleria: MediaS[];
   teaser?: string;
+  youtube?: string;
+  inRepertorio?: boolean;
   schedaTecnica?: string;
   date: Opera["date"];
 };
@@ -111,6 +113,7 @@ const sorgente: OperaSorgente[] = [
       g(16, "La performer avvolta in un telo di plastica trasparente", "The performer wrapped in clear plastic", "La performeuse enveloppée dans du plastique transparent"),
       g(17, "La scena con l'installazione e la performer in piedi", "The stage with the installation and the performer standing", "La scène avec l'installation et la performeuse debout"),
     ],
+    youtube: "qGjU1TjUeeI",
     schedaTecnica: "/documenti/girandola-amen-scheda-tecnica.pdf",
     date: [{ data: "2026-05-20", luogo: "Lorem Teatro", citta: "Bologna" }],
   },
@@ -259,9 +262,54 @@ const sorgente: OperaSorgente[] = [
     teaser: "/media/gorgoglio/teaser.mp4",
     date: [],
   },
+  {
+    // DA COMPLETARE con Eva: anno, descrizione, crediti, foto
+    slug: "cattiva-incivile-citta",
+    titolo: "Cattiva incivile città",
+    tipo: "performance",
+    sottotitolo: { it: "Performance", en: "Performance", fr: "Performance" },
+    sinossi: {
+      it: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      en: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      fr: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    },
+    testo: [],
+    crediti: [{ ruolo: { it: "Performer", en: "Performer", fr: "Performeuse" }, nome: "Eva Maesa" }],
+    pubblicoAdulto: false,
+    ancheInEventi: false,
+    copertina: { src: "", alt: { it: "Cattiva incivile città", en: "Cattiva incivile città", fr: "Cattiva incivile città" } },
+    galleria: [],
+    youtube: "4Lf-Z8IsEb4",
+    date: [],
+  },
+  {
+    // DA COMPLETARE con Eva: anno, descrizione, crediti, foto. Al momento non in repertorio.
+    slug: "primera-soy-mujer",
+    titolo: "Primera soy mujer",
+    tipo: "spettacolo",
+    sottotitolo: {
+      it: "Spettacolo, al momento non in repertorio",
+      en: "Show, not currently in the repertoire",
+      fr: "Spectacle, actuellement hors répertoire",
+    },
+    sinossi: {
+      it: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      en: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      fr: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    },
+    testo: [],
+    crediti: [{ ruolo: { it: "Interprete", en: "Performer", fr: "Interprète" }, nome: "Eva Maesa" }],
+    pubblicoAdulto: false,
+    ancheInEventi: false,
+    inRepertorio: false,
+    copertina: { src: "", alt: { it: "Primera soy mujer", en: "Primera soy mujer", fr: "Primera soy mujer" } },
+    galleria: [],
+    youtube: "iHP0Tj9OZLg",
+    date: [],
+  },
 ];
 
-const m = (x: MediaS, l: Lingua) => ({ src: x.src, alt: x.alt[l], credito: x.credito });
+const m = (x: MediaS, l: Lingua) => ({ src: x.src || undefined, alt: x.alt[l], credito: x.credito });
 
 /** Le opere nella lingua richiesta, ordinate dalla più recente. */
 export function opereIn(l: Lingua): Opera[] {
@@ -284,6 +332,8 @@ export function opereIn(l: Lingua): Opera[] {
       copertina: m(o.copertina, l),
       galleria: o.galleria.map((x) => m(x, l)),
       teaser: o.teaser,
+      youtube: o.youtube,
+      inRepertorio: o.inRepertorio ?? true,
       schedaTecnica: o.schedaTecnica,
       date: o.date,
     }))

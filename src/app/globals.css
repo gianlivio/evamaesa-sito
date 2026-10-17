@@ -310,6 +310,9 @@ main { padding-bottom: 6rem; }
 .dati dt { color: var(--inchiostro-tenue); }
 .dati dd { margin: 0; }
 
+.youtube { position: relative; aspect-ratio: 16 / 9; width: 100%; max-width: 56rem; margin-bottom: 1.5rem; background: #000; }
+.youtube iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
 .galleria {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -471,7 +474,7 @@ fieldset.campo { border: 0; padding: 0; margin: 0; }
   color: #f6f1e6;
   --pannello: rgb(14 16 36 / 0.74);
 }
-.stanza-tela { position: absolute; inset: 0; touch-action: none; cursor: grab; }
+.stanza-tela { position: absolute; inset: 0; z-index: 0; touch-action: none; cursor: grab; }
 .stanza-tela:active { cursor: grabbing; }
 
 .stanza-attesa {

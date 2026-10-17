@@ -258,7 +258,7 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
 
   // quando il video parla, la musica si abbassa
   useEffect(() => {
-    orc.abbassa(modo === "opera" && fuocoId === "media" && !!opera?.teaser);
+    orc.abbassa(modo === "opera" && fuocoId === "media" && !!(opera?.teaser || opera?.youtube));
   }, [orc, modo, fuocoId, opera]);
 
   useEffect(() => {
@@ -381,7 +381,7 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
       didascalia = (
         <>
           <strong>{opera.titolo}</strong>
-          <span>{fuocoId === "media" && opera.teaser ? t.videoAudio : t.lettura}</span>
+          <span>{fuocoId === "media" && opera.teaser ? t.videoAudio : fuocoId === "media" && opera.youtube ? "YouTube" : t.lettura}</span>
           <button type="button" className="stanza-apri" onClick={() => setFuocoId(null)}>
             {t.allontanati}
           </button>
@@ -389,13 +389,13 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
       );
     } else {
       const azioni: [string, () => void][] = [
-        [opera.teaser ? t.azioni[0] : t.azioni[1], () => metti("media")],
+        [opera.teaser || opera.youtube ? t.azioni[0] : t.azioni[1], () => metti("media")],
         [t.azioni[2], () => metti("foto-0")],
         [t.azioni[3], () => metti("testo")],
         [t.azioni[4], apriScheda],
       ];
       const [etichetta, azione] = azioni[settore];
-      const disattivo = (settore === 1 && nFoto === 0) || (settore === 0 && !opera.teaser && !imp.mediaImmagine);
+      const disattivo = (settore === 1 && nFoto === 0) || (settore === 0 && !opera.teaser && !opera.youtube && !imp.mediaImmagine);
       didascalia = (
         <>
           <strong>{opera.titolo}</strong>
@@ -474,6 +474,7 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
                 onAspettoVideo={setAspettoVideo}
                 onSopra={(s) => setSopra(s ? "x" : null)}
                 lingua={lingua}
+                paretaInVista={settore}
               />
             ) : null}
           </Suspense>

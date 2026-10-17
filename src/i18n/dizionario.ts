@@ -70,6 +70,8 @@ const it = {
     avvisoRegione: "Avviso sui contenuti",
     mostra: "Mostra le immagini",
     noVideo: "Il tuo browser non riproduce questo video.",
+    video: "Video",
+    nonInRepertorio: "Al momento questo spettacolo non è in repertorio.",
   },
   contatti: {
     titolo: "Contatti",
@@ -210,6 +212,8 @@ const en: Dizionario = {
     avvisoRegione: "Content notice",
     mostra: "Show the images",
     noVideo: "Your browser cannot play this video.",
+    video: "Video",
+    nonInRepertorio: "This show is not currently in the repertoire.",
   },
   contatti: {
     titolo: "Contact",
@@ -348,6 +352,8 @@ const fr: Dizionario = {
     avvisoRegione: "Avertissement sur le contenu",
     mostra: "Afficher les images",
     noVideo: "Votre navigateur ne peut pas lire cette vidéo.",
+    video: "Vidéo",
+    nonInRepertorio: "Ce spectacle n'est pas au répertoire actuellement.",
   },
   contatti: {
     titolo: "Contact",

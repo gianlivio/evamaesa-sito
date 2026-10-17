@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Sfasato } from "@/components/Sfasato";
 import { Immagine } from "@/components/Immagine";
 import { Velo } from "@/components/Velo";
+import { YouTube } from "@/components/YouTube";
 import { slugOpere, trovaOpera } from "@/content/opere";
 import { LOCALE, percorso, type Lingua } from "@/i18n/lingue";
 import { dizionario } from "@/i18n/dizionario";
@@ -28,8 +29,10 @@ export async function SchedaOpera({ lingua, params }: { lingua: Lingua } & Param
   const t = dizionario(lingua).scheda;
   const formatoData = new Intl.DateTimeFormat(LOCALE[lingua], { day: "numeric", month: "short", year: "numeric" });
 
+  const foto = [o.copertina, ...o.galleria].filter((m) => m.src);
   const immagini = (
     <section className="sezione" aria-label={t.immagini}>
+      {o.youtube ? <YouTube id={o.youtube} titolo={`${o.titolo}, ${t.video.toLowerCase()}`} /> : null}
       {o.teaser ? (
         <video
           src={o.teaser}
@@ -45,11 +48,13 @@ export async function SchedaOpera({ lingua, params }: { lingua: Lingua } & Param
           {t.noVideo}
         </video>
       ) : null}
-      <div className="galleria">
-        {[o.copertina, ...o.galleria].map((m, i) => (
-          <Immagine key={i} media={m} rapporto="4 / 3" lingua={lingua} />
-        ))}
-      </div>
+      {foto.length > 0 ? (
+        <div className="galleria">
+          {foto.map((m, i) => (
+            <Immagine key={i} media={m} rapporto="4 / 3" lingua={lingua} />
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 
@@ -114,9 +119,13 @@ export async function SchedaOpera({ lingua, params }: { lingua: Lingua } & Param
                 {t.tecnica}
               </a>
             ) : null}
-            <Link href={`${percorso(lingua, "contatti")}?tipo=programmazione&opera=${o.slug}`} className="bottone">
-              {t.disponibilita}
-            </Link>
+            {o.inRepertorio === false ? (
+              <p className="tenue">{t.nonInRepertorio}</p>
+            ) : (
+              <Link href={`${percorso(lingua, "contatti")}?tipo=programmazione&opera=${o.slug}`} className="bottone">
+                {t.disponibilita}
+              </Link>
+            )}
           </div>
         </aside>
       </div>

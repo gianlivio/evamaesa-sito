@@ -31,6 +31,10 @@ export type Opera = {
   copertina: Media;
   galleria: Media[];
   teaser?: string;
+  /** id di un video YouTube (trailer o ripresa) */
+  youtube?: string;
+  /** false: opera non disponibile al momento, resta nell'archivio */
+  inRepertorio?: boolean;
   schedaTecnica?: string;
   date: Data[];
 };

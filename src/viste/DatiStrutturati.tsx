@@ -65,7 +65,19 @@ export function operaLd(o: Opera, lingua: Lingua) {
     ...(o.copertina.src ? { image: SITO_URL + o.copertina.src } : {}),
     creator: { "@id": `${SITO_URL}/#eva-maesa` },
     contributor: o.crediti.filter((c) => c.nome !== "Eva Maesa").map((c) => ({ "@type": "Person", name: c.nome, roleName: c.ruolo })),
-    ...(o.teaser ? { video: { "@type": "VideoObject", name: o.titolo, contentUrl: SITO_URL + o.teaser, thumbnailUrl: SITO_URL + o.teaser.replace(/\.mp4$/, ".jpg"), description: o.sinossi, uploadDate: "2026-04-01" } } : {}),
+    ...(o.youtube
+      ? {
+          video: {
+            "@type": "VideoObject",
+            name: o.titolo,
+            description: o.sinossi,
+            embedUrl: `https://www.youtube-nocookie.com/embed/${o.youtube}`,
+            contentUrl: `https://www.youtube.com/watch?v=${o.youtube}`,
+            thumbnailUrl: `https://i.ytimg.com/vi/${o.youtube}/hqdefault.jpg`,
+          },
+        }
+      : {}),
+    ...(o.teaser && !o.youtube ? { video: { "@type": "VideoObject", name: o.titolo, contentUrl: SITO_URL + o.teaser, thumbnailUrl: SITO_URL + o.teaser.replace(/\.mp4$/, ".jpg"), description: o.sinossi, uploadDate: "2026-04-01" } } : {}),
   };
 }
 

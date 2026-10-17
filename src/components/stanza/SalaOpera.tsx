@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { type ThreeEvent } from "@react-three/fiber";
-import { Text, useTexture } from "@react-three/drei";
+import { Html, Text, useTexture } from "@react-three/drei";
+import { urlYouTube } from "@/components/YouTube";
 import * as THREE from "three";
 import type { Media, Opera } from "@/content/tipi";
 import { FONT_TESTO, FONT_TITOLI, suParete, useStrisce, type Tema } from "./comune";
@@ -31,6 +32,39 @@ export type Impaginato = {
   testo: Elemento;
   dati: Elemento;
 };
+
+/*
+ * Video YouTube sulla parete: un iframe vero, posato nella scena 3D con una trasformazione CSS.
+ * drei usa 400 / distanceFactor pixel per metro: il fattore si ricava dalla larghezza voluta.
+ * Il lettore compare solo quando la parete è in vista, perché l'HTML non viene coperto dalla scena.
+ */
+function VideoYouTube({ el, id, titolo, visibile }: { el: Elemento; id: string; titolo: string; visibile: boolean }) {
+  const { position, rotation } = suParete(el.a, LATO - 0.03);
+  const px = 640;
+  const pxAltezza = Math.round((px * el.h) / el.w);
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[el.x, el.y, 0.01]}>
+        <planeGeometry args={[el.w + 0.14, el.h + 0.14]} />
+        <meshStandardMaterial color="#0b0c18" roughness={0.4} />
+      </mesh>
+      {visibile ? (
+        <Html transform distanceFactor={(400 * el.w) / px} position={[el.x, el.y, 0.03]} zIndexRange={[1, 0]}>
+          <iframe
+            src={urlYouTube(id)}
+            title={titolo}
+            width={px}
+            height={pxAltezza}
+            style={{ border: 0, display: "block" }}
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </Html>
+      ) : null}
+    </group>
+  );
+}
 
 /** Stima l'altezza di un blocco di testo per impilare i blocchi sulla parete. */
 function altezzaTesto(testo: string, corpo: number, larghezza: number, interlinea: number, em = 0.5) {
@@ -63,10 +97,12 @@ export function impagina(opera: Opera, aspettoVideo: number, lingua: Lingua): Im
     a: PARETI[0],
     x: 0,
     y: 0.45 + hMedia / 2,
-    w: opera.teaser ? hMedia * aspettoVideo : 3.6,
+    w: opera.teaser ? hMedia * aspettoVideo : opera.youtube ? (hMedia * 16) / 9 : 3.6,
     h: hMedia,
   };
-  const immagini = opera.teaser ? [opera.copertina, ...opera.galleria] : opera.galleria;
+  // se sulla parete 0 c'è un video, la copertina va con le altre foto
+  const haVideo = !!(opera.teaser || opera.youtube);
+  const immagini = haVideo ? [opera.copertina, ...opera.galleria] : opera.galleria;
   const immaginiConFile = immagini.filter((m) => m.src);
 
   const n = immaginiConFile.length;
@@ -103,7 +139,7 @@ export function impagina(opera: Opera, aspettoVideo: number, lingua: Lingua): Im
 
   return {
     media,
-    mediaImmagine: opera.teaser ? undefined : opera.copertina.src ? opera.copertina : undefined,
+    mediaImmagine: haVideo ? undefined : opera.copertina.src ? opera.copertina : undefined,
     foto,
     testo: { id: "testo", a: PARETI[2], x: -1.45, y: T.cima - hPannelli / 2, w: 6.6, h: hPannelli },
     dati: { id: "dati", a: PARETI[2], x: 3.4, y: T.cima - hPannelli / 2, w: 3.2, h: hPannelli },
@@ -611,8 +647,10 @@ export function SalaOpera({
   onAspettoVideo,
   onSopra,
   lingua,
+  paretaInVista,
 }: {
   lingua: Lingua;
+  paretaInVista: number;
   opera: Opera;
   imp: Impaginato;
   tema: Tema;
@@ -669,6 +707,8 @@ export function SalaOpera({
           onClick={cliccabile(() => onElemento("media"))}
           onSopra={onSopra}
         />
+      ) : opera.youtube ? (
+        <VideoYouTube el={imp.media} id={opera.youtube} titolo={opera.titolo} visibile={paretaInVista === 0} />
       ) : null}
 
       {/* parete 1: foto (e copertina sulla parete 0 quando non c'è video) */}
