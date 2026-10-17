@@ -6,6 +6,8 @@ import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { FONT_TITOLI as FONT, coloriCirco, smorza, suParete, useStrisce, type Tema } from "./comune";
 import { Clown, Festone, Palloncino, Podio, Stella, compagnia } from "./Circo";
+import type { Lingua } from "@/i18n/lingue";
+import { dizionario } from "@/i18n/dizionario";
 
 export type Porta = {
   slug: string;
@@ -110,19 +112,19 @@ function Ambiente({
   if (tema === "circo") return <CircoAtrio totale={totale} ridotto={ridotto} onClacson={onClacson} />;
   return (
     <group key="sala">
-      <ambientLight intensity={0.6} color="#b9bde8" />
-      <hemisphereLight args={["#8b90c8", "#1a1424", 0.5]} />
+      <ambientLight intensity={1.25} color="#fff8f0" />
+      <hemisphereLight args={["#ffffff", "#b49a84", 0.9]} />
       <mesh position={[0, H / 2, 0]}>
         <cylinderGeometry args={[R, R, H, 96, 1, true]} />
-        <meshStandardMaterial color="#323862" side={THREE.BackSide} roughness={0.95} />
+        <meshStandardMaterial color="#dde0f8" side={THREE.BackSide} roughness={0.95} />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, H, 0]}>
         <circleGeometry args={[R, 96]} />
-        <meshStandardMaterial color="#14172d" roughness={1} />
+        <meshStandardMaterial color="#eef0fb" roughness={1} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[R, 96]} />
-        <meshStandardMaterial color="#2a2431" roughness={0.75} />
+        <meshStandardMaterial color="#c4a484" roughness={0.7} />
       </mesh>
     </group>
   );
@@ -148,7 +150,7 @@ function OcchioDiBue({ a }: { a: number }) {
         position={[Math.sin(a) * (R - 3.2), H - 0.15, -Math.cos(a) * (R - 3.2)]}
         angle={0.42}
         penumbra={0.7}
-        intensity={70}
+        intensity={28}
         color="#ffe6b8"
         decay={2}
       />
@@ -170,8 +172,10 @@ function PortaMesh({
   onSopra,
   onFuori,
   onApri,
+  etichettaAdulto,
 }: {
   porta: Porta;
+  etichettaAdulto: string;
   a: number;
   tema: Tema;
   indice: number;
@@ -191,10 +195,10 @@ function PortaMesh({
   });
 
   const sala = tema === "sala";
-  const coloreAnta = sala ? "#3b3654" : coloriCirco[indice % coloriCirco.length];
-  const coloreCornice = sala ? "#1a1c33" : "#f4e7cf";
+  const coloreAnta = sala ? "#4a4170" : coloriCirco[indice % coloriCirco.length];
+  const coloreCornice = sala ? "#1e2240" : "#f4e7cf";
   const coloreMetallo = sala ? "#c9a24a" : "#f2d27a";
-  const coloreTesto = sala ? "#f1ead8" : "#1e2240";
+  const coloreTesto = "#1e2240";
   const luceOltre = sala ? "#f3d9a4" : "#fff4dc";
 
   const clic = (e: ThreeEvent<MouseEvent>) => {
@@ -252,7 +256,7 @@ function PortaMesh({
               anchorY="middle"
               position={[0, 0, 0.005]}
             >
-              {"Riservata a un\npubblico adulto"}
+              {etichettaAdulto}
             </Text>
           </group>
         ) : null}
@@ -319,7 +323,9 @@ function Leva({
   onSopra,
   onFuori,
   onScatta,
+  etichette,
 }: {
+  etichette: { circo: string; sala: string };
   a: number;
   tema: Tema;
   ridotto: boolean;
@@ -338,7 +344,7 @@ function Leva({
     braccio.current.rotation.x = smorza(braccio.current.rotation.x, obiettivo, 9, dt, ridotto);
   });
 
-  const coloreTesto = sala ? "#f1ead8" : "#1e2240";
+  const coloreTesto = "#1e2240";
 
   return (
     <group position={position} rotation={rotation}>
@@ -359,10 +365,10 @@ function Leva({
           </mesh>
         </group>
         <Text font={FONT} fontSize={0.13} color={coloreTesto} anchorX="center" position={[0, 2.0, 0.04]}>
-          Circo
+          {etichette.circo}
         </Text>
         <Text font={FONT} fontSize={0.13} color={coloreTesto} anchorX="center" position={[0, 0.72, 0.04]}>
-          Sala
+          {etichette.sala}
         </Text>
         <mesh
           position={[0, 1.35, 0.15]}
@@ -398,7 +404,9 @@ export function Atrio({
   onApri,
   onLeva,
   onClacson,
+  lingua,
 }: {
+  lingua: Lingua;
   porte: Porta[];
   tema: Tema;
   sopra: string | null;
@@ -411,10 +419,11 @@ export function Atrio({
   onClacson: () => void;
 }) {
   const totale = porte.length + 1; // l'ultimo slot è l'interruttore
+  const t = dizionario(lingua).stanza;
 
   return (
     <>
-      <color attach="background" args={[tema === "sala" ? "#0e1024" : "#2a1410"]} />
+      <color attach="background" args={[tema === "sala" ? "#dfe2f5" : "#2a1410"]} />
       <Ambiente tema={tema} totale={totale} ridotto={ridotto} onClacson={onClacson} />
       {porte.map((p, i) => {
         const a = angoloSlot(i, totale);
@@ -433,6 +442,7 @@ export function Atrio({
               onSopra={() => onSopra(p.slug)}
               onFuori={() => onSopra(null)}
               onApri={() => onApri(i)}
+              etichettaAdulto={t.riservataPorta}
             />
           </group>
         );
@@ -445,6 +455,7 @@ export function Atrio({
         onSopra={() => onSopra("leva")}
         onFuori={() => onSopra(null)}
         onScatta={onLeva}
+        etichette={t.leva}
       />
     </>
   );

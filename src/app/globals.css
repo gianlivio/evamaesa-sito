@@ -149,6 +149,7 @@ img, video { display: block; max-width: 100%; }
   vertical-align: 0.04em;
 }
 
+.navigazione { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1.75rem; }
 .navigazione ul {
   display: flex;
   flex-wrap: wrap;
@@ -158,6 +159,16 @@ img, video { display: block; max-width: 100%; }
   padding: 0;
 }
 .navigazione a { text-decoration: none; padding: 0.25rem 0; }
+.navigazione .voce-stanza {
+  border: 1px solid var(--inchiostro);
+  border-radius: 999px;
+  padding: 0.2rem 0.85rem;
+  white-space: nowrap;
+}
+.navigazione .voce-stanza:hover { background: var(--inchiostro); color: white; text-decoration: none; }
+.navigazione .lingue { gap: 0.25rem 0.6rem; font-size: var(--t-s); }
+.navigazione .lingue a { color: var(--inchiostro-tenue); }
+.navigazione .lingue a[aria-current="true"] { color: var(--inchiostro); text-decoration: underline; text-decoration-color: var(--naso); text-decoration-thickness: 2px; }
 .navigazione a[aria-current="page"],
 .navigazione a:hover {
   text-decoration: underline;

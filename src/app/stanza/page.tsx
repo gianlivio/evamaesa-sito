@@ -1,14 +1,15 @@
-import type { Metadata } from "next";
-import { opere } from "@/content/opere";
+import { opereIn } from "@/content/opere";
 import { Caricatore } from "@/components/stanza/Caricatore";
+import { meta } from "@/viste/meta";
+import { dizionario } from "@/i18n/dizionario";
 
-export const metadata: Metadata = {
-  title: "La stanza",
-  description: "Le opere di Eva Maesa in una stanza da esplorare: ogni porta è uno spettacolo o una performance.",
-};
+const t = dizionario("it");
+export const metadata = meta("it", "stanza", t.stanza.titolo, t.meta.stanzaDescr);
 
-export default function PaginaStanza() {
-  // stesso ordine dell'elenco opere
-  const ordinate = [...opere].sort((a, b) => (b.anno ?? 0) - (a.anno ?? 0));
-  return <Caricatore opere={ordinate} />;
+export default function Pagina() {
+  return (
+    <div lang="it">
+      <Caricatore lingua="it" opere={opereIn("it")} />
+    </div>
+  );
 }

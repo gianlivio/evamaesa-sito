@@ -7,7 +7,9 @@ import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Opera } from "@/content/tipi";
 import { Atrio, R, angoloSlot, type Porta } from "./Atrio";
-import { SalaOpera, LATO, NOMI_PARETI, PARETI, impagina } from "./SalaOpera";
+import { SalaOpera, LATO, PARETI, impagina } from "./SalaOpera";
+import { percorso, percorsoOpera, type Lingua } from "@/i18n/lingue";
+import { dizionario } from "@/i18n/dizionario";
 import { Regia } from "./Regia";
 import { OCCHI, fuocoSu, type Tema } from "./comune";
 import { orchestra, type NomeBrano } from "./suono";
@@ -37,7 +39,8 @@ function useAspetto() {
 
 const CENTRO = new THREE.Vector3(0, OCCHI, 0);
 
-export default function Stanza({ opere }: { opere: Opera[] }) {
+export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera[] }) {
+  const t = dizionario(lingua).stanza;
   const router = useRouter();
   const ridotto = useMovimentoRidotto();
   const aspetto = useAspetto();
@@ -66,7 +69,7 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
   const [audio, setAudio] = useState(orc.attivo);
 
   const opera = useMemo(() => opere.find((o) => o.slug === slugAperta) ?? null, [opere, slugAperta]);
-  const imp = useMemo(() => (opera ? impagina(opera, aspettoVideo) : null), [opera, aspettoVideo]);
+  const imp = useMemo(() => (opera ? impagina(opera, aspettoVideo, lingua) : null), [opera, aspettoVideo, lingua]);
   const settori = modo === "atrio" ? totaleAtrio : 4;
   const passo = (Math.PI * 2) / settori;
 
@@ -183,8 +186,8 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
 
   const apriScheda = useCallback(() => {
     if (!opera) return;
-    router.push(`/opere/${opera.slug}${opera.pubblicoAdulto ? "?immagini=1" : ""}`);
-  }, [opera, router]);
+    router.push(`${percorsoOpera(lingua, opera.slug)}${opera.pubblicoAdulto ? "?immagini=1" : ""}`);
+  }, [opera, router, lingua]);
 
   const apri = useCallback(
     (indice: number) => {
@@ -346,18 +349,18 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
         <strong>{portaInVista.titolo}</strong>
         <span>
           {portaInVista.sottotitolo}
-          {portaInVista.pubblicoAdulto ? ". Riservata a un pubblico adulto" : ""}
+          {portaInVista.pubblicoAdulto ? `. ${t.riservata}` : ""}
         </span>
         <button type="button" className="stanza-apri" onClick={() => apri(settore)} disabled={!!scelta}>
-          Apri la porta
+          {t.apriPorta}
         </button>
       </>
     ) : (
       <>
-        <strong>Interruttore</strong>
-        <span>Cambia la stanza tra sala e circo</span>
+        <strong>{t.interruttore}</strong>
+        <span>{t.interruttoreTesto}</span>
         <button type="button" className="stanza-apri" onClick={cambiaTema}>
-          {tema === "sala" ? "Accendi il circo" : "Torna in sala"}
+          {tema === "sala" ? t.accendiCirco : t.tornaSala}
         </button>
       </>
     );
@@ -365,15 +368,13 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
     if (fotoInFuoco) {
       didascalia = (
         <>
-          <strong>
-            Foto {indiceFoto + 1} di {nFoto}
-          </strong>
+          <strong>{t.foto(indiceFoto + 1, nFoto)}</strong>
           <span>
             {fotoInFuoco.media.alt}
-            {fotoInFuoco.media.credito ? `. Foto di ${fotoInFuoco.media.credito}` : ""}
+            {fotoInFuoco.media.credito ? `. ${t.fotoDi} ${fotoInFuoco.media.credito}` : ""}
           </span>
           <button type="button" className="stanza-apri" onClick={() => setFuocoId(null)}>
-            Allontanati
+            {t.allontanati}
           </button>
         </>
       );
@@ -381,25 +382,25 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
       didascalia = (
         <>
           <strong>{opera.titolo}</strong>
-          <span>{fuocoId === "media" && opera.teaser ? "Video con audio" : "Lettura da vicino"}</span>
+          <span>{fuocoId === "media" && opera.teaser ? t.videoAudio : t.lettura}</span>
           <button type="button" className="stanza-apri" onClick={() => setFuocoId(null)}>
-            Allontanati
+            {t.allontanati}
           </button>
         </>
       );
     } else {
       const azioni: [string, () => void][] = [
-        [opera.teaser ? "Guarda il video" : "Guarda da vicino", () => metti("media")],
-        ["Sfoglia le foto", () => metti("foto-0")],
-        ["Leggi", () => metti("testo")],
-        ["Scheda completa e contatti", apriScheda],
+        [opera.teaser ? t.azioni[0] : t.azioni[1], () => metti("media")],
+        [t.azioni[2], () => metti("foto-0")],
+        [t.azioni[3], () => metti("testo")],
+        [t.azioni[4], apriScheda],
       ];
       const [etichetta, azione] = azioni[settore];
       const disattivo = (settore === 1 && nFoto === 0) || (settore === 0 && !opera.teaser && !imp.mediaImmagine);
       didascalia = (
         <>
           <strong>{opera.titolo}</strong>
-          <span>{NOMI_PARETI[settore]}</span>
+          <span>{t.pareti[settore]}</span>
           <button type="button" className="stanza-apri" onClick={azione} disabled={disattivo}>
             {etichetta}
           </button>
@@ -433,8 +434,8 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
           aria-hidden="true"
           fallback={
             <div className="stanza-ripiego">
-              <p>Il tuo browser non riesce a mostrare la stanza 3D. Le opere sono tutte nell’elenco.</p>
-              <Link href="/opere">Vai all’elenco delle opere</Link>
+              <p>{t.ripiego}</p>
+              <Link href={percorso(lingua, "opere")}>{t.vaiElenco}</Link>
             </div>
           }
         >
@@ -460,6 +461,7 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
                 onApri={apri}
                 onLeva={cambiaTema}
                 onClacson={() => orc.effetto("clacson")}
+                lingua={lingua}
               />
             ) : opera && imp ? (
               <SalaOpera
@@ -472,6 +474,7 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
                 onScheda={apriScheda}
                 onAspettoVideo={setAspettoVideo}
                 onSopra={(s) => setSopra(s ? "x" : null)}
+                lingua={lingua}
               />
             ) : null}
           </Suspense>
@@ -481,30 +484,30 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
       <div className={`stanza-buio${buio ? " attivo" : ""}`} aria-hidden="true" />
 
       <header className="stanza-alto">
-        <h1>{modo === "opera" && opera ? opera.titolo : "La stanza"}</h1>
+        <h1>{modo === "opera" && opera ? opera.titolo : t.titolo}</h1>
         <div className="stanza-comandi">
           <button type="button" className="stanza-pillola" aria-pressed={audio} onClick={cambiaAudio}>
-            {audio ? "Suono sì" : "Suono no"}
+            {audio ? t.suonoSi : t.suonoNo}
           </button>
           <button type="button" className="stanza-pillola" aria-pressed={tema === "circo"} onClick={cambiaTema}>
-            {tema === "sala" ? "Accendi il circo" : "Torna in sala"}
+            {tema === "sala" ? t.accendiCirco : t.tornaSala}
           </button>
         </div>
       </header>
 
       {!trascinato ? (
         <p className="stanza-suggerimento" aria-hidden="true">
-          Trascina per guardarti intorno
+          {t.trascina}
         </p>
       ) : null}
 
       <div className="stanza-basso">
         <div className="stanza-fuoco" aria-live="polite">
-          <button type="button" className="stanza-freccia" onClick={frecce(-1)} aria-label={indiceFoto >= 0 ? "Foto precedente" : "Guarda a sinistra"}>
+          <button type="button" className="stanza-freccia" onClick={frecce(-1)} aria-label={indiceFoto >= 0 ? t.precedente : t.sinistra}>
             ‹
           </button>
           <div className="stanza-didascalia">{didascalia}</div>
-          <button type="button" className="stanza-freccia" onClick={frecce(1)} aria-label={indiceFoto >= 0 ? "Foto successiva" : "Guarda a destra"}>
+          <button type="button" className="stanza-freccia" onClick={frecce(1)} aria-label={indiceFoto >= 0 ? t.successiva : t.destra}>
             ›
           </button>
         </div>
@@ -512,14 +515,14 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
         <div className="stanza-uscite">
           {modo === "opera" ? (
             <button type="button" className="stanza-esci" onClick={esci}>
-              Torna nella stanza
+              {t.tornaStanza}
             </button>
           ) : null}
-          <Link href="/opere" className="stanza-esci">
+          <Link href={percorso(lingua, "opere")} className="stanza-esci">
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 4v15M5 12l7 7 7-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Torna al sito
+            {t.tornaSito}
           </Link>
         </div>
       </div>
@@ -527,13 +530,13 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
       {/* contenuti per chi usa lettori di schermo */}
       <div className="sr-only">
         {modo === "atrio" ? (
-          <nav aria-label="Porte della stanza">
+          <nav aria-label={t.porte}>
             <ul>
               {porte.map((p) => (
                 <li key={p.slug}>
-                  <Link href={`/opere/${p.slug}`}>
+                  <Link href={percorsoOpera(lingua, p.slug)}>
                     {p.titolo}
-                    {p.pubblicoAdulto ? ", riservata a un pubblico adulto" : ""}
+                    {p.pubblicoAdulto ? `, ${t.riservata}` : ""}
                   </Link>
                 </li>
               ))}
@@ -546,7 +549,7 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
             {opera.testo.map((t, i) => (
               <p key={i}>{t}</p>
             ))}
-            <Link href={`/opere/${opera.slug}`}>Scheda completa</Link>
+            <Link href={percorsoOpera(lingua, opera.slug)}>{t.schedaCompleta}</Link>
           </article>
         ) : null}
       </div>
@@ -557,13 +560,13 @@ export default function Stanza({ opere }: { opere: Opera[] }) {
             <p id="conferma-titolo" className="stanza-conferma-titolo">
               {operaConferma.titolo}
             </p>
-            <p>Dietro questa porta c’è un’opera riservata a un pubblico adulto. Le immagini contengono nudo.</p>
+            <p>{t.conferma}</p>
             <div className="stanza-conferma-azioni">
               <button ref={entra} type="button" className="bottone" onClick={() => varca(operaConferma.slug)}>
-                Entra
+                {t.entra}
               </button>
               <button type="button" className="bottone secondario" onClick={() => setConferma(null)}>
-                Resta nella stanza
+                {t.resta}
               </button>
             </div>
           </div>

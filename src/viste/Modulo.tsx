@@ -2,42 +2,42 @@
 
 import { useActionState } from "react";
 import { inviaRichiesta, type Esito } from "./azione";
+import type { Lingua } from "@/i18n/lingue";
+import { dizionario } from "@/i18n/dizionario";
 
-const tipi = [
-  { valore: "evento", label: "Festa o evento privato" },
-  { valore: "programmazione", label: "Festival, teatro, rassegna" },
-  { valore: "altro", label: "Altro" },
-];
+const TIPI = ["evento", "programmazione", "altro"] as const;
 
-export function Modulo({ tipoIniziale, opera }: { tipoIniziale?: string; opera?: string }) {
+export function Modulo({ lingua, tipoIniziale, opera }: { lingua: Lingua; tipoIniziale?: string; opera?: string }) {
   const [esito, azione, inCorso] = useActionState<Esito, FormData>(inviaRichiesta, { stato: "vuoto" });
+  const t = dizionario(lingua).modulo;
 
   if (esito.stato === "ok") {
     return (
       <div className="esito" role="status">
-        <p>Richiesta inviata. La risposta arriverà all'indirizzo email che hai indicato.</p>
+        <p>{t.ok}</p>
       </div>
     );
   }
 
   const v = esito.campi ?? {};
-  const tipo = v.tipo || (tipi.some((t) => t.valore === tipoIniziale) ? tipoIniziale : "evento");
+  const tipo = v.tipo || ((TIPI as readonly string[]).includes(tipoIniziale ?? "") ? tipoIniziale : "evento");
+  const errore = esito.stato === "errore" ? (esito.codice === "email" ? t.emailErrata : t.mancano) : null;
 
   return (
     <form action={azione} className="modulo" noValidate>
-      {esito.stato === "errore" ? (
+      {errore ? (
         <div className="esito" role="alert" style={{ borderLeftColor: "var(--naso)" }}>
-          {esito.messaggio}
+          {errore}
         </div>
       ) : null}
 
       <fieldset className="campo">
-        <legend>Di cosa si tratta</legend>
+        <legend>{t.tipo}</legend>
         <div className="scelte">
-          {tipi.map((t) => (
-            <label key={t.valore}>
-              <input type="radio" name="tipo" value={t.valore} defaultChecked={t.valore === tipo} />
-              {t.label}
+          {TIPI.map((valore) => (
+            <label key={valore}>
+              <input type="radio" name="tipo" value={valore} defaultChecked={valore === tipo} />
+              {t.tipi[valore]}
             </label>
           ))}
         </div>
@@ -45,11 +45,11 @@ export function Modulo({ tipoIniziale, opera }: { tipoIniziale?: string; opera?:
 
       <div className="riga">
         <div className="campo">
-          <label htmlFor="nome">Nome</label>
+          <label htmlFor="nome">{t.nome}</label>
           <input id="nome" name="nome" autoComplete="name" required defaultValue={v.nome} />
         </div>
         <div className="campo">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t.email}</label>
           <input id="email" name="email" type="email" autoComplete="email" required defaultValue={v.email} />
         </div>
       </div>
@@ -57,13 +57,13 @@ export function Modulo({ tipoIniziale, opera }: { tipoIniziale?: string; opera?:
       <div className="riga">
         <div className="campo">
           <label htmlFor="telefono">
-            Telefono <span className="aiuto">facoltativo</span>
+            {t.telefono} <span className="aiuto">{t.facoltativo}</span>
           </label>
           <input id="telefono" name="telefono" type="tel" autoComplete="tel" defaultValue={v.telefono} />
         </div>
         <div className="campo">
           <label htmlFor="data">
-            Data <span className="aiuto">se già fissata</span>
+            {t.data} <span className="aiuto">{t.seFissata}</span>
           </label>
           <input id="data" name="data" type="date" defaultValue={v.data} />
         </div>
@@ -71,31 +71,26 @@ export function Modulo({ tipoIniziale, opera }: { tipoIniziale?: string; opera?:
 
       <div className="campo">
         <label htmlFor="luogo">
-          Luogo <span className="aiuto">città o location</span>
+          {t.luogo} <span className="aiuto">{t.cittaLocation}</span>
         </label>
         <input id="luogo" name="luogo" defaultValue={v.luogo} />
       </div>
 
       <div className="campo">
-        <label htmlFor="messaggio">Messaggio</label>
-        <textarea
-          id="messaggio"
-          name="messaggio"
-          required
-          defaultValue={v.messaggio}
-          placeholder="Che occasione è, quante persone, l'età dei bambini, quanto dovrebbe durare."
-        />
+        <label htmlFor="messaggio">{t.messaggio}</label>
+        <textarea id="messaggio" name="messaggio" required defaultValue={v.messaggio} placeholder={t.segnaposto} />
       </div>
 
       <input type="hidden" name="opera" value={opera ?? v.opera ?? ""} />
+      <input type="hidden" name="lingua" value={lingua} />
       <div aria-hidden="true" style={{ position: "absolute", left: "-9999px" }}>
-        <label htmlFor="sito">Non compilare</label>
+        <label htmlFor="sito">{t.esca}</label>
         <input id="sito" name="sito" tabIndex={-1} autoComplete="off" />
       </div>
 
       <div>
         <button type="submit" className="bottone" disabled={inCorso}>
-          {inCorso ? "Invio in corso" : "Invia la richiesta"}
+          {inCorso ? t.invio : t.invia}
         </button>
       </div>
     </form>

@@ -1,11 +1,13 @@
-import { profilo } from "@/content/profilo";
+import { profiloIn } from "@/content/profilo";
+import type { Lingua } from "@/i18n/lingue";
 import { Invito } from "./Invito";
 
-export function Piede() {
+export function Piede({ lingua }: { lingua: Lingua }) {
+  const profilo = profiloIn(lingua);
   return (
     <footer className="contenitore">
       <div className="piede">
-        <Invito />
+        <Invito lingua={lingua} />
         <div className="minuto">
           <p>
             <a href={`mailto:${profilo.email}`}>{profilo.email}</a>
