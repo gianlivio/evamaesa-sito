@@ -31,7 +31,13 @@ export default async function SchedaOpera({ params }: Params) {
   const immagini = (
     <section className="sezione" aria-label="Immagini">
       {o.teaser ? (
-        <video src={o.teaser} controls preload="metadata" style={{ width: "100%", marginBottom: "1rem" }}>
+        <video
+          src={o.teaser}
+          poster={o.teaser.replace(/\.mp4$/, ".jpg")}
+          controls
+          preload="metadata"
+          style={{ width: "100%", maxWidth: "22rem", marginBottom: "1rem" }}
+        >
           Il tuo browser non riproduce questo video.
         </video>
       ) : null}

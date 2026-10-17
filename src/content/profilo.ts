@@ -11,7 +11,7 @@ export const profilo = {
     "Vicina al circo e alla danza, approfondisce la ricerca sul clown e la poetica del teatro dell'oppresso. Lavora anche come educatrice, favorendo integrazione e comunicazione non violenta.",
     "Poeta, performer, clownesse, trampoliera, attrice eclettica, scrive anche per gruppi di circo e teatro. Sperimenta una poetica fisica in dialogo con musica elettronica e dal vivo, cercando ostinatamente di dar voce all'indicibile.",
   ],
-  cv: "https://www.evamaesa.it/wp-content/uploads/2026/05/Eva-Maesa-cv2.pdf",
+  cv: "/documenti/eva-maesa-cv.pdf",
   email: "evamaesamail@gmail.com",
   telefono: "+39 328 903 2760",
   telefonoHref: "+393289032760",

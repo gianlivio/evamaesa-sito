@@ -21,7 +21,7 @@ export default function ChiSono() {
 
       <section className="contenitore">
         <div className="bio">
-          <Immagine media={{ alt: "Ritratto di Eva Maesa" }} rapporto="3 / 4" />
+          <Immagine media={{ src: "/media/ritratti/01.jpg", alt: "Ritratto di Eva Maesa con una giacca rossa" }} rapporto="3 / 4" />
           <div>
             {profilo.bio.map((p, i) => (
               <p key={i} className={i === 0 ? "introduzione" : undefined}>

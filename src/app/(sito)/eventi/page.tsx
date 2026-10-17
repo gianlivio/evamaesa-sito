@@ -11,6 +11,18 @@ export const metadata: Metadata = {
     "Animazione per feste di bambini, matrimoni, eventi aziendali e piazze: clown, trampoli, palloncini, truccabimbi, spettacoli.",
 };
 
+const df = "Dante Farricella";
+const galleria = [
+  { src: "/media/eventi/02.jpg", alt: "Eva sui trampoli con giacca e cappello, sotto un portico", credito: df },
+  { src: "/media/eventi/03.jpg", alt: "Eva sui trampoli con un nastro, in un cortile", credito: df },
+  { src: "/media/eventi/05.jpg", alt: "Eva sui trampoli in costume bianco davanti a un portone", credito: df },
+  { src: "/media/eventi/04.jpg", alt: "Eva sui trampoli tra le piante, con un cappello verde", credito: df },
+  { src: "/media/eventi/01.jpg", alt: "Eva sui trampoli con pantaloni a colori, in un prato" },
+  { src: "/media/eventi/07.jpg", alt: "Eva che si prepara a salire sui trampoli", credito: df },
+  { src: "/media/eventi/08.jpg", alt: "Una clown con la parrucca colorata gioca con una bambina in piazza" },
+  { src: "/media/eventi/09.jpg", alt: "Fruoth Fru racconta una storia a una bambina, in un giardino" },
+];
+
 export default function Eventi() {
   const spettacoli = opere.filter((o) => o.ancheInEventi && !o.pubblicoAdulto);
 
@@ -76,8 +88,8 @@ export default function Eventi() {
       <section className="contenitore sezione">
         <h2>Galleria</h2>
         <div className="galleria">
-          {Array.from({ length: 6 }, (_, i) => (
-            <Immagine key={i} media={{ alt: `Animazione, foto ${i + 1}` }} rapporto="2 / 3" />
+          {galleria.map((m) => (
+            <Immagine key={m.src} media={m} rapporto="2 / 3" />
           ))}
         </div>
       </section>

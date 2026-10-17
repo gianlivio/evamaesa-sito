@@ -2,11 +2,12 @@ import type { Opera } from "./tipi";
 
 /*
  * Testi ripresi da evamaesa.it dove disponibili; il resto è segnaposto.
- * Immagini: segnaposto finché l'artista non fornisce i materiali.
+ * Immagini da evamaesa.it, ridimensionate in /public/media.
+ * Credito "Dante Farricella" sulle foto con il suo nome o con i prefissi _DFZ/_Z636 nel file originale.
  */
 
-const lorem =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus, posuere velit aliquet.";
+const df = "Dante Farricella";
+const g = (n: number, alt: string) => ({ src: `/media/girandola-amen/${String(n).padStart(2, "0")}.jpg`, alt, credito: df });
 
 export const opere: Opera[] = [
   {
@@ -31,16 +32,30 @@ export const opere: Opera[] = [
       { ruolo: "Visual, interazione e tecnica", nome: "Gianluca Lovreglio" },
       { ruolo: "Musiche", nome: "Francesca Valente, Filippo Poderini, Gianluca Lovreglio" },
     ],
-    // DA VERIFICARE con l'artista se l'opera contiene nudo
-    pubblicoAdulto: false,
+    // le foto di scena mostrano nudo parziale
+    pubblicoAdulto: true,
+    avviso: "Le immagini di questa performance contengono nudo e sono riservate a un pubblico adulto.",
     ancheInEventi: false,
-    copertina: { alt: "Eva Maesa in scena in Girandola, Amen" },
+    copertina: g(1, "Il volto di Eva Maesa che affiora da un drappo rosso"),
     galleria: [
-      { alt: "Girandola, Amen, scena 1" },
-      { alt: "Girandola, Amen, scena 2" },
-      { alt: "Girandola, Amen, scena 3" },
+      g(2, "Eva Maesa illuminata da una luce blu, con il braccio teso"),
+      g(3, "Piedi nudi su un telo, sotto una veste di carta"),
+      g(4, "La performer con lo sguardo verso l'alto, oggetti sospesi in aria"),
+      g(5, "La performer di profilo e la sua ombra sulla parete"),
+      g(6, "La performer con una benda gialla sugli occhi"),
+      g(7, "La performer con le mani dipinte di nero, rivolte verso il pubblico"),
+      g(8, "La performer con un braccio alzato, in movimento"),
+      g(9, "Una figura in bianco di spalle e un nastro rosso in volo"),
+      g(10, "La performer che sistema un'installazione di teli bianchi"),
+      g(11, "La performer di spalle, in controluce"),
+      g(12, "La performer che disegna su un cubo di tessuto bianco"),
+      g(13, "La performer con una campana tibetana e una sciarpa rossa"),
+      g(14, "La performer avvolta in bende di tessuto bianco"),
+      g(15, "La locandina di Girandola, Amen"),
+      g(16, "La performer avvolta in un telo di plastica trasparente"),
+      g(17, "La scena con l'installazione e la performer in piedi"),
     ],
-    schedaTecnica: "https://www.evamaesa.it/wp-content/uploads/2026/05/GIRANDOLA-AMEN-Scheda-Tecnica-1.pdf",
+    schedaTecnica: "/documenti/girandola-amen-scheda-tecnica.pdf",
     date: [
       { data: "2026-05-20", luogo: "Lorem Teatro", citta: "Bologna" },
     ],
@@ -65,12 +80,9 @@ export const opere: Opera[] = [
     ],
     pubblicoAdulto: false,
     ancheInEventi: true,
-    copertina: { alt: "Uno sgruzzo sui trampoli in piazza" },
-    galleria: [
-      { alt: "Animali MAI, parata" },
-      { alt: "Animali MAI, gli sgruzzi" },
-    ],
-    schedaTecnica: "https://www.evamaesa.it/wp-content/uploads/2026/05/Scheda-tecnica-Animali-MAI.pdf",
+    copertina: { src: "/media/animali-mai/01.jpg", alt: "Gli sgruzzi sui trampoli sotto le volte di un sotterraneo" },
+    galleria: [{ src: "/media/animali-mai/02.jpg", alt: "La parata degli sgruzzi in un parco, tra il pubblico" }],
+    schedaTecnica: "/documenti/animali-mai-scheda-tecnica.pdf",
     date: [],
   },
   {
@@ -90,30 +102,20 @@ export const opere: Opera[] = [
     crediti: [{ ruolo: "Ideazione e interpretazione", nome: "Eva Maesa" }],
     pubblicoAdulto: false,
     ancheInEventi: true,
-    copertina: { alt: "Fruoth Fru, la clownesse di Gorgoglìo" },
-    galleria: [{ alt: "Gorgoglìo, in scena" }],
-    teaser: "https://www.evamaesa.it/wp-content/uploads/2026/04/Gorgoglio.mp4",
+    copertina: {
+      src: "/media/gorgoglio/01.jpg",
+      alt: "Fruoth Fru con il naso rosso, in piedi tra gli oggetti di scena, con un nastro in volo",
+      credito: df,
+    },
+    galleria: [
+      { src: "/media/gorgoglio/02.jpg", alt: "Fruoth Fru seduta a terra mentre fa giocoleria con tre palline", credito: df },
+      { src: "/media/gorgoglio/03.jpg", alt: "Fruoth Fru mostra un piccolo maglione a righe", credito: df },
+      { src: "/media/gorgoglio/04.jpg", alt: "Fruoth Fru con un palloncino lungo teso tra le braccia", credito: df },
+      { src: "/media/gorgoglio/05.jpg", alt: "Fruoth Fru con una bambina e un palloncino, in giardino" },
+      { src: "/media/gorgoglio/06.jpg", alt: "Fruoth Fru sorride con il naso rosso e il cappello" },
+    ],
+    teaser: "/media/gorgoglio/teaser.mp4",
     date: [],
-  },
-  {
-    // SEGNAPOSTO: serve a provare l'avviso sui contenuti. Da sostituire o rimuovere.
-    slug: "opera-di-prova",
-    titolo: "Titolo di prova",
-    anno: 2025,
-    tipo: "performance",
-    sottotitolo: "Performance, segnaposto",
-    sinossi: lorem,
-    testo: [lorem, lorem],
-    durata: "Lorem minuti",
-    formato: "Lorem",
-    lingua: "Lorem",
-    crediti: [{ ruolo: "Ideazione e performer", nome: "Eva Maesa" }],
-    pubblicoAdulto: true,
-    avviso: "Questa performance contiene nudo. Le immagini sono riservate a un pubblico adulto.",
-    ancheInEventi: false,
-    copertina: { alt: "Immagine segnaposto" },
-    galleria: [{ alt: "Immagine segnaposto" }, { alt: "Immagine segnaposto" }],
-    date: [{ data: "2025-11-08", luogo: "Lorem Spazio", citta: "Roma" }],
   },
 ];
 
