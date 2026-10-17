@@ -1,4 +1,6 @@
 export type Media = {
+  /** punto da tenere in vista quando l'immagine viene ritagliata (object-position) */
+  fuoco?: string;
   /** percorso in /public oppure URL; se assente si mostra un segnaposto */
   src?: string;
   alt: string;

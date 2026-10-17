@@ -10,7 +10,7 @@ export function Immagine({ media, rapporto = "4 / 5", lingua = "it" }: { media: 
     <figure className="figura">
       {media.src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={media.src} alt={media.alt} style={{ aspectRatio: rapporto, objectFit: "cover", width: "100%" }} loading="lazy" />
+        <img src={media.src} alt={media.alt} style={{ aspectRatio: rapporto, objectFit: "cover", objectPosition: media.fuoco, width: "100%" }} loading="lazy" />
       ) : (
         <div className="segnaposto" role="img" aria-label={media.alt} style={{ "--rapporto": rapporto } as CSSProperties}>
           {t.inArrivo}

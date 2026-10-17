@@ -1,6 +1,6 @@
 import { Sfasato } from "@/components/Sfasato";
 import { Immagine } from "@/components/Immagine";
-import { esperienzeIn, profiloIn } from "@/content/profilo";
+import { esperienzeIn, profiloIn, ritrattiIn } from "@/content/profilo";
 import type { Lingua } from "@/i18n/lingue";
 import { dizionario } from "@/i18n/dizionario";
 
@@ -32,6 +32,15 @@ export function ChiSono({ lingua }: { lingua: Lingua }) {
               </a>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="contenitore sezione">
+        <h2>{t.ritratti}</h2>
+        <div className="galleria">
+          {ritrattiIn(lingua).map((m) => (
+            <Immagine key={m.src} media={m} rapporto="3 / 4" lingua={lingua} />
+          ))}
         </div>
       </section>
 

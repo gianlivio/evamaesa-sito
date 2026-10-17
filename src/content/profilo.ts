@@ -244,4 +244,41 @@ const galleriaS: { src: string; alt: Tr; credito?: string }[] = [
     },
   },
 ];
+/* Ritratti per casting e stampa: crediti solo dove il fotografo è noto (dai dati dei file) */
+const ritrattiS: { src: string; alt: Tr; credito?: string; fuoco?: string }[] = [
+  {
+    src: "/media/ritratti/02.jpg",
+    alt: { it: "Ritratto di Eva Maesa seduta, in giacca nera su fondo scuro", en: "Portrait of Eva Maesa seated, in a black jacket on a dark background", fr: "Portrait d'Eva Maesa assise, veste noire sur fond sombre" },
+    credito: "Emanuele Fabiano",
+  },
+  {
+    src: "/media/ritratti/03.jpg",
+    alt: { it: "Primo piano di Eva Maesa con la giacca sulla spalla, contro un muro chiaro", en: "Close-up of Eva Maesa with a jacket over her shoulder, against a pale wall", fr: "Gros plan d'Eva Maesa, veste sur l'épaule, contre un mur clair" },
+    credito: df,
+  },
+  {
+    src: "/media/ritratti/04.jpg",
+    fuoco: "78% 50%",
+    alt: { it: "Eva Maesa che ride, in bianco e nero", en: "Eva Maesa laughing, in black and white", fr: "Eva Maesa qui rit, en noir et blanc" },
+  },
+  {
+    src: "/media/ritratti/05.jpg",
+    alt: { it: "Eva Maesa sorridente con il viso tra le mani", en: "Eva Maesa smiling with her face in her hands", fr: "Eva Maesa souriante, le visage entre les mains" },
+  },
+  {
+    src: "/media/ritratti/06.jpg",
+    alt: { it: "Eva Maesa a figura intera, in salopette bianca e anfibi", en: "Full-length shot of Eva Maesa in white dungarees and boots", fr: "Eva Maesa en pied, salopette blanche et rangers" },
+  },
+  {
+    src: "/media/ritratti/07.jpg",
+    alt: { it: "Eva Maesa in salopette bianca, con un braccio dietro la testa", en: "Eva Maesa in white dungarees, one arm behind her head", fr: "Eva Maesa en salopette blanche, un bras derrière la tête" },
+  },
+  {
+    src: "/media/ritratti/08.jpg",
+    fuoco: "25% 50%",
+    alt: { it: "Eva Maesa di tre quarti, con lo sguardo lontano", en: "Eva Maesa in three-quarter view, gazing into the distance", fr: "Eva Maesa de trois quarts, le regard au loin" },
+  },
+];
+export const ritrattiIn = (l: Lingua): Media[] => ritrattiS.map((g) => ({ src: g.src, alt: g.alt[l], credito: g.credito, fuoco: g.fuoco }));
+
 export const galleriaEventiIn = (l: Lingua): Media[] => galleriaS.map((g) => ({ src: g.src, alt: g.alt[l], credito: g.credito }));

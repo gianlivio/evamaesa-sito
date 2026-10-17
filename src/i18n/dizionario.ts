@@ -37,6 +37,7 @@ const it = {
     ritratto: "Eva Maesa che si prepara a salire sui trampoli",
     cv: "Scarica il curriculum (PDF)",
     percorso: "Percorso",
+    ritratti: "Ritratti",
     categorie: { formazione: "Formazione", compagnia: "Compagnia", collaborazione: "Collaborazione", educazione: "Educazione" },
   },
   eventi: {
@@ -178,6 +179,7 @@ const en: Dizionario = {
     titolo: "About",
     ritratto: "Eva Maesa getting ready to climb onto her stilts",
     cv: "Download CV (PDF)",
+    ritratti: "Portraits",
     percorso: "Background",
     categorie: { formazione: "Training", compagnia: "Company", collaborazione: "Collaboration", educazione: "Education" },
   },
@@ -318,6 +320,7 @@ const fr: Dizionario = {
     titolo: "À propos",
     ritratto: "Eva Maesa se prépare à monter sur ses échasses",
     cv: "Télécharger le CV (PDF)",
+    ritratti: "Portraits",
     percorso: "Parcours",
     categorie: { formazione: "Formation", compagnia: "Compagnie", collaborazione: "Collaboration", educazione: "Éducation" },
   },

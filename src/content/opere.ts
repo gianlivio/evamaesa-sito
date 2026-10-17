@@ -7,7 +7,7 @@ import type { Lingua, Tr } from "@/i18n/lingue";
  * Credito "Dante Farricella" sulle foto con il suo nome o con i prefissi _DFZ/_Z636 nel file originale.
  */
 
-type MediaS = { src: string; alt: Tr; credito?: string };
+type MediaS = { src: string; alt: Tr; credito?: string; fuoco?: string };
 type OperaSorgente = {
   slug: string;
   titolo: string;
@@ -173,6 +173,24 @@ const sorgente: OperaSorgente[] = [
           fr: "La parade des sgruzzi dans un parc, au milieu du public",
         },
       },
+      {
+        src: "/media/animali-mai/03.jpg",
+        fuoco: "50% 4%",
+        alt: {
+          it: "Uno sgruzzo con il becco arancione e le piume, sui trampoli tra il pubblico di un parco",
+          en: "A sgruzzo with an orange beak and feathers, on stilts among the audience in a park",
+          fr: "Un sgruzzo au bec orange et aux plumes, sur échasses parmi le public d'un parc",
+        },
+      },
+      {
+        src: "/media/animali-mai/04.jpg",
+        fuoco: "50% 6%",
+        alt: {
+          it: "Eva in sella a uno sgruzzo sui trampoli, durante una parata in strada",
+          en: "Eva riding a sgruzzo on stilts during a street parade",
+          fr: "Eva sur un sgruzzo, sur échasses, pendant une parade dans la rue",
+        },
+      },
     ],
     schedaTecnica: "/documenti/animali-mai-scheda-tecnica.pdf",
     date: [],
@@ -309,7 +327,7 @@ const sorgente: OperaSorgente[] = [
   },
 ];
 
-const m = (x: MediaS, l: Lingua) => ({ src: x.src || undefined, alt: x.alt[l], credito: x.credito });
+const m = (x: MediaS, l: Lingua) => ({ src: x.src || undefined, alt: x.alt[l], credito: x.credito, fuoco: x.fuoco });
 
 /** Le opere nella lingua richiesta, ordinate dalla più recente. */
 export function opereIn(l: Lingua): Opera[] {
