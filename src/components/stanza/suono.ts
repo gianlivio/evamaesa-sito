@@ -7,7 +7,19 @@
 export type NomeBrano = "atrio-sala" | "atrio-circo" | "girandola-amen" | "gorgoglio" | "animali-mai";
 export type NomeEffetto = "porta" | "leva-circo" | "leva-sala" | "clacson" | "pop" | "sfoglia" | "uscita" | "campanello";
 
-type Strumento = "calliope" | "accordo" | "basso" | "carillon" | "pad" | "campana" | "clarinetto" | "tamburo" | "bolla" | "vento";
+type Strumento =
+  | "calliope"
+  | "accordo"
+  | "basso"
+  | "carillon"
+  | "pad"
+  | "campana"
+  | "clarinetto"
+  | "tamburo"
+  | "bolla"
+  | "vento"
+  | "xilofono"
+  | "legnetto";
 type Nota = [inizio: number, durata: number, nota: string | number, strumento: Strumento, volume?: number];
 type Brano = { bpm: number; battiti: number; note: Nota[]; volume: number };
 
@@ -65,25 +77,44 @@ function valzerCirco(): Brano {
   return { bpm: 168, battiti: 48, note, volume: 0.55 };
 }
 
-function ambienteSala(): Brano {
-  const accordi = [
-    ["A2", "E3", "C4", "E4"],
-    ["F2", "C3", "A3", "E4"],
-    ["C3", "G3", "E4", "G4"],
-    ["G2", "D3", "B3", "D4"],
+function marcettaSala(): Brano {
+  // marcetta allo xilofono in sol maggiore, 2/4, con basso "zum-pa" e legnetto
+  const giro = ["G", "G", "D", "D", "G", "G", "C", "D", "G", "G", "D", "D", "C", "D", "G", "G"];
+  const melodia: (string | null)[][] = [
+    ["D5", "G5", "B5", "G5"],
+    ["D6", null, "B5", null],
+    ["C6", "A5", "F#5", "A5"],
+    ["D6", null, "A5", null],
+    ["B5", "C6", "D6", "B5"],
+    ["G5", null, "D5", null],
+    ["E5", "G5", "C6", "E6"],
+    ["D6", "C6", "B5", "A5"],
+    ["D5", "G5", "B5", "G5"],
+    ["D6", null, "B5", null],
+    ["F#5", "A5", "D6", "F#6"],
+    ["E6", "D6", "C6", "A5"],
+    ["G5", "E5", "C6", "E5"],
+    ["F#5", "A5", "D6", "C6"],
+    ["B5", "D6", "G5", "B5"],
+    ["G5", null, null, null],
   ];
+  const accordi: Record<string, [string, string, string[]]> = {
+    G: ["G2", "D3", ["G4", "B4", "D5"]],
+    D: ["D2", "A2", ["F#4", "A4", "D5"]],
+    C: ["C3", "G2", ["E4", "G4", "C5"]],
+  };
   const note: Nota[] = [];
-  accordi.forEach((acc, i) => acc.forEach((n) => note.push([i * 8, 8.6, n, "pad", 0.16])));
-  [
-    [2, "E5"],
-    [7, "A5"],
-    [13, "G5"],
-    [18, "C6"],
-    [23, "D5"],
-    [29, "E5"],
-    [30.5, "B5"],
-  ].forEach(([t, n]) => note.push([t as number, 4, n as string, "campana", 0.22]));
-  return { bpm: 60, battiti: 32, note, volume: 0.5 };
+  giro.forEach((c, bar) => {
+    const t = bar * 2;
+    const [r, q, acc] = accordi[c];
+    note.push([t, 0.4, r, "basso", 0.8], [t + 1, 0.4, q, "basso", 0.7]);
+    for (const k of [0.5, 1.5]) {
+      acc.forEach((n) => note.push([t + k, 0.3, n, "accordo", 0.16]));
+      note.push([t + k, 0.1, 0, "legnetto", 0.25]);
+    }
+    melodia[bar].forEach((n, i) => n && note.push([t + i * 0.5, 0.4, n, "xilofono", 0.55]));
+  });
+  return { bpm: 132, battiti: 32, note, volume: 0.55 };
 }
 
 function giostraGorgoglio(): Brano {
@@ -104,46 +135,63 @@ function giostraGorgoglio(): Brano {
 }
 
 function paradaAnimali(): Brano {
-  // clarinetto di strada in re dorico, con grancassa da parata
-  const melodia: Nota[] = [
-    [0, 1, "D5", "clarinetto"], [1, 0.5, "E5", "clarinetto"], [1.5, 0.5, "F5", "clarinetto"], [2, 1, "G5", "clarinetto"], [3, 1, "A5", "clarinetto"],
-    [4, 1.5, "C6", "clarinetto"], [5.5, 0.5, "B5", "clarinetto"], [6, 1, "A5", "clarinetto"], [7, 1, "G5", "clarinetto"],
-    [8, 1, "F5", "clarinetto"], [9, 0.5, "G5", "clarinetto"], [9.5, 0.5, "A5", "clarinetto"], [10, 1, "E5", "clarinetto"], [11, 1, "C5", "clarinetto"],
-    [12, 3, "D5", "clarinetto"],
+  // clarinetto da parata in re maggiore, con grancassa e basso
+  const melodia: [number, number, string][] = [
+    [0, 1, "D5"], [1, 0.5, "E5"], [1.5, 0.5, "F#5"], [2, 1, "G5"], [3, 1, "A5"],
+    [4, 1.5, "B5"], [5.5, 0.5, "A5"], [6, 1, "G5"], [7, 1, "F#5"],
+    [8, 1, "E5"], [9, 0.5, "F#5"], [9.5, 0.5, "G5"], [10, 1, "A5"], [11, 1, "C#6"],
+    [12, 3, "D6"],
   ];
-  const note: Nota[] = melodia.map(([t, d, n, s]) => [t, d * 0.95, n, s, 0.42]);
-  for (let b = 0; b < 16; b += 2) note.push([b, 0.3, 60, "tamburo", b % 4 === 0 ? 0.8 : 0.45]);
-  note.push([0, 8.2, "D2", "pad", 0.12], [8, 8.2, "A1", "pad", 0.12]);
-  return { bpm: 92, battiti: 16, note, volume: 0.5 };
+  const note: Nota[] = melodia.map(([t, d, n]) => [t, d * 0.9, n, "clarinetto", 0.42]);
+  for (let b = 0; b < 16; b++) {
+    if (b % 2 === 0) note.push([b, 0.3, 60, "tamburo", b % 4 === 0 ? 0.75 : 0.45]);
+    note.push([b + 0.5, 0.1, 0, "legnetto", 0.18]);
+    const radice = b < 8 ? (b % 2 ? "A2" : "D2") : b < 12 ? (b % 2 ? "E2" : "A2") : b % 2 ? "A2" : "D2";
+    note.push([b, 0.4, radice, "basso", 0.6]);
+  }
+  return { bpm: 108, battiti: 16, note, volume: 0.5 };
 }
 
-function ritoGirandola(): Brano {
-  // bordone scuro, campane rituali e un soffio di vento
-  const accordi = [
-    ["D2", "A2", "F3", "E4"],
-    ["Bb1", "F2", "D3", "A3"],
-    ["G1", "D2", "Bb2", "F3"],
-    ["A1", "E2", "D3", "A3"],
+function carillonGirandola(): Brano {
+  // valzer da carillon in fa maggiore, leggero, con accordi morbidi
+  const melodia: [string, number][][] = [
+    [["A5", 1], ["C6", 1], ["F6", 1]],
+    [["E6", 2], ["C6", 1]],
+    [["D6", 1], ["A5", 1], ["F5", 1]],
+    [["F5", 1], ["G5", 1], ["Bb5", 1]],
+    [["A5", 2], ["F5", 1]],
+    [["G5", 1], ["E5", 1], ["C5", 1]],
+    [["D5", 1], ["F5", 1], ["Bb5", 1]],
+    [["A5", 3]],
+  ];
+  const giro: [string, string[]][] = [
+    ["F2", ["F4", "A4", "C5"]],
+    ["C3", ["E4", "G4", "C5"]],
+    ["D3", ["D4", "F4", "A4"]],
+    ["Bb2", ["D4", "F4", "Bb4"]],
+    ["F2", ["F4", "A4", "C5"]],
+    ["C3", ["E4", "G4", "C5"]],
+    ["Bb2", ["D4", "F4", "Bb4"]],
+    ["F2", ["F4", "A4", "C5"]],
   ];
   const note: Nota[] = [];
-  accordi.forEach((acc, i) => acc.forEach((n) => note.push([i * 8, 8.8, n, "pad", 0.15])));
-  [
-    [1, "D5"],
-    [5.5, "A4"],
-    [11, "F5"],
-    [17, "E5"],
-    [22.5, "D5"],
-    [27, "C5"],
-    [29, "A4"],
-  ].forEach(([t, n]) => note.push([t as number, 6, n as string, "campana", 0.2]));
-  note.push([12, 6, 0, "vento", 0.25], [26, 5, 0, "vento", 0.2]);
-  return { bpm: 50, battiti: 32, note, volume: 0.55 };
+  giro.forEach(([r, acc], bar) => {
+    const t = bar * 3;
+    note.push([t, 0.8, r, "basso", 0.5]);
+    acc.forEach((n) => note.push([t, 2.8, n, "pad", 0.07]));
+    let x = t;
+    melodia[bar].forEach(([n, d]) => {
+      note.push([x, d, n, "carillon", 0.5]);
+      x += d;
+    });
+  });
+  return { bpm: 100, battiti: 24, note, volume: 0.5 };
 }
 
 const BRANI: Record<NomeBrano, () => Brano> = {
-  "atrio-sala": ambienteSala,
+  "atrio-sala": marcettaSala,
   "atrio-circo": valzerCirco,
-  "girandola-amen": ritoGirandola,
+  "girandola-amen": carillonGirandola,
   gorgoglio: giostraGorgoglio,
   "animali-mai": paradaAnimali,
 };
@@ -192,16 +240,20 @@ class Orchestra {
       this.riverbero = ctx.createConvolver();
       this.riverbero.buffer = this.impulso(2.2);
       const umido = ctx.createGain();
-      umido.gain.value = 0.28;
+      umido.gain.value = 0.14;
       this.riverbero.connect(umido).connect(this.master);
       this.bus.connect(this.master);
       this.bus.connect(this.riverbero);
       this.fx.connect(this.master);
       this.fx.connect(this.riverbero);
       this.rumore = this.bufferRumore();
+      // quando il browser sblocca davvero l'audio, il brano riparte dall'inizio
+      ctx.addEventListener("statechange", () => {
+        if (ctx.state === "running" && this.nomeBrano) this.avviaBrano(this.nomeBrano);
+      });
       if (this.nomeBrano) this.avviaBrano(this.nomeBrano);
     }
-    if (this.ctx.state === "suspended") this.ctx.resume().catch(() => {});
+    if (this.ctx.state !== "running") this.ctx.resume().catch(() => {});
   }
 
   get pronto() {
@@ -399,6 +451,26 @@ class Orchestra {
         vib.start(t);
         vib.stop(t + d + 0.2);
         this.inviluppo(g, t, 0.05, v * 0.22, d, 0.1);
+        break;
+      }
+      case "xilofono": {
+        // barra di legno: fondamentale e parziale acuta che si spengono presto
+        this.osc("sine", f, t, t + 0.5, g);
+        const h = ctx.createGain();
+        h.gain.value = 0.35;
+        h.connect(g);
+        this.osc("sine", f * 3.93, t, t + 0.15, h);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(v * 0.5, t + 0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+        break;
+      }
+      case "legnetto": {
+        const o = this.osc("sine", 1750, t, t + 0.06, g);
+        o.frequency.exponentialRampToValueAtTime(1400, t + 0.05);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(v * 0.4, t + 0.002);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
         break;
       }
       case "tamburo": {

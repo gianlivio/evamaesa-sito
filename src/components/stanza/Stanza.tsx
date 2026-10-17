@@ -238,14 +238,13 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
   /* ---- suono ---- */
 
   useEffect(() => {
+    // i browser sbloccano l'audio solo con certi gesti (Safari: clic e fine del tocco);
+    // si riprova a ogni gesto finché il suono non è davvero attivo
+    const eventi = ["pointerdown", "pointerup", "click", "touchend", "keydown"] as const;
     const avvia = () => orc.avvia();
-    window.addEventListener("pointerdown", avvia);
-    window.addEventListener("keydown", avvia);
-    window.addEventListener("touchstart", avvia);
+    eventi.forEach((e) => window.addEventListener(e, avvia, { passive: true }));
     return () => {
-      window.removeEventListener("pointerdown", avvia);
-      window.removeEventListener("keydown", avvia);
-      window.removeEventListener("touchstart", avvia);
+      eventi.forEach((e) => window.removeEventListener(e, avvia));
       orc.ferma();
     };
   }, [orc]);
