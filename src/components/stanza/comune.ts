@@ -1,13 +1,8 @@
-import { useMemo } from "react";
 import * as THREE from "three";
-
-export type Tema = "sala" | "circo";
 
 export const FONT_TITOLI = "/fonts/gloock.woff";
 export const FONT_TESTO = "/fonts/hanken.woff";
 export const OCCHI = 1.6; // altezza della camera (m)
-
-export const coloriCirco = ["#d8342b", "#2a5bb8", "#f2b632", "#2f8f5b", "#7a3fa0", "#e46a1f"];
 
 export function smorza(attuale: number, obiettivo: number, velocita: number, dt: number, ridotto: boolean) {
   return ridotto ? obiettivo : THREE.MathUtils.damp(attuale, obiettivo, velocita, dt);
@@ -45,23 +40,3 @@ export function fuocoSu(a: number, r: number, x: number, y: number, w: number, h
   return { look: puntoParete(a, r, x, yc, 0), pos: puntoParete(a, r, x, yc, d) };
 }
 
-/** Texture a strisce verticali, ripetibile. */
-export function useStrisce(c1: string, c2: string, ripetizioni: number) {
-  return useMemo(() => {
-    const c = document.createElement("canvas");
-    c.width = 64;
-    c.height = 4;
-    const g = c.getContext("2d")!;
-    g.fillStyle = c1;
-    g.fillRect(0, 0, 32, 4);
-    g.fillStyle = c2;
-    g.fillRect(32, 0, 32, 4);
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.wrapS = THREE.RepeatWrapping;
-    t.repeat.set(ripetizioni, 1);
-    t.magFilter = THREE.NearestFilter;
-    t.anisotropy = 4;
-    return t;
-  }, [c1, c2, ripetizioni]);
-}

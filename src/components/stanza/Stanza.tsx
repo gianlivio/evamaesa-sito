@@ -11,7 +11,7 @@ import { SalaOpera, LATO, PARETI, impagina } from "./SalaOpera";
 import { percorso, percorsoOpera, type Lingua } from "@/i18n/lingue";
 import { dizionario } from "@/i18n/dizionario";
 import { Regia } from "./Regia";
-import { OCCHI, fuocoSu, type Tema } from "./comune";
+import { OCCHI, fuocoSu } from "./comune";
 import { orchestra, type NomeBrano } from "./suono";
 
 function useMovimentoRidotto() {
@@ -49,12 +49,11 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
     () => opere.map(({ slug, titolo, sottotitolo, anno, pubblicoAdulto }) => ({ slug, titolo, sottotitolo, anno, pubblicoAdulto })),
     [opere],
   );
-  const totaleAtrio = porte.length + 1;
+  const totaleAtrio = porte.length;
 
   const yaw = useRef(0);
   const [modo, setModo] = useState<"atrio" | "opera">("atrio");
   const [slugAperta, setSlugAperta] = useState<string | null>(null);
-  const [tema, setTema] = useState<Tema>("sala");
   const [buio, setBuio] = useState(false);
   const [sopra, setSopra] = useState<string | null>(null);
   const [settore, setSettore] = useState(0);
@@ -135,12 +134,6 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
     [ridotto],
   );
 
-  const cambiaTema = useCallback(() => {
-    orc.avvia();
-    orc.effetto(tema === "sala" ? "leva-circo" : "leva-sala");
-    nelBuio(() => setTema((t) => (t === "sala" ? "circo" : "sala")));
-  }, [nelBuio, orc, tema]);
-
   const aggiornaUrl = (slug: string | null) => {
     const url = slug ? `${window.location.pathname}?opera=${slug}` : window.location.pathname;
     window.history.replaceState(null, "", url);
@@ -192,16 +185,13 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
   const apri = useCallback(
     (indice: number) => {
       if (scelta) return;
-      if (indice >= porte.length) {
-        cambiaTema();
-        return;
-      }
+      if (indice >= porte.length) return;
       const p = porte[indice];
       guarda(indice, totaleAtrio);
       if (p.pubblicoAdulto) setConferma(p.slug);
       else varca(p.slug);
     },
-    [porte, scelta, guarda, cambiaTema, varca, totaleAtrio],
+    [porte, scelta, guarda, varca, totaleAtrio],
   );
 
   const metti = useCallback(
@@ -252,9 +242,9 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
   useEffect(() => {
     const brani: string[] = ["girandola-amen", "gorgoglio", "animali-mai"];
     const nome: NomeBrano =
-      modo === "atrio" ? (tema === "circo" ? "atrio-circo" : "atrio-sala") : brani.includes(slugAperta ?? "") ? (slugAperta as NomeBrano) : "atrio-sala";
+      modo === "atrio" ? "atrio-sala" : brani.includes(slugAperta ?? "") ? (slugAperta as NomeBrano) : "atrio-sala";
     orc.suona(nome);
-  }, [orc, modo, tema, slugAperta]);
+  }, [orc, modo, slugAperta]);
 
   // quando il video parla, la musica si abbassa
   useEffect(() => {
@@ -356,15 +346,7 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
           {t.apriPorta}
         </button>
       </>
-    ) : (
-      <>
-        <strong>{t.interruttore}</strong>
-        <span>{t.interruttoreTesto}</span>
-        <button type="button" className="stanza-apri" onClick={cambiaTema}>
-          {tema === "sala" ? t.accendiCirco : t.tornaSala}
-        </button>
-      </>
-    );
+    ) : null;
   } else if (opera && imp) {
     if (fotoInFuoco) {
       didascalia = (
@@ -419,7 +401,7 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
   };
 
   return (
-    <div className={`stanza stanza-${tema}`}>
+    <div className="stanza stanza-sala">
       <div
         className="stanza-tela"
         onPointerDown={giu}
@@ -453,22 +435,18 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
             {modo === "atrio" ? (
               <Atrio
                 porte={porte}
-                tema={tema}
                 sopra={sopra}
                 scelta={scelta}
                 inConferma={conferma}
                 ridotto={ridotto}
                 onSopra={setSopra}
                 onApri={apri}
-                onLeva={cambiaTema}
-                onClacson={() => orc.effetto("clacson")}
                 lingua={lingua}
               />
             ) : opera && imp ? (
               <SalaOpera
                 opera={opera}
                 imp={imp}
-                tema={tema}
                 fuoco={fuocoId}
                 onElemento={metti}
                 onEsci={esci}
@@ -490,9 +468,6 @@ export default function Stanza({ lingua, opere }: { lingua: Lingua; opere: Opera
         <div className="stanza-comandi">
           <button type="button" className="stanza-pillola" aria-pressed={audio} onClick={cambiaAudio}>
             {audio ? t.suonoSi : t.suonoNo}
-          </button>
-          <button type="button" className="stanza-pillola" aria-pressed={tema === "circo"} onClick={cambiaTema}>
-            {tema === "sala" ? t.accendiCirco : t.tornaSala}
           </button>
         </div>
       </header>

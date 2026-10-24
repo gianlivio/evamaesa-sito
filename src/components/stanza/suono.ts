@@ -4,8 +4,8 @@
  * Le melodie sono originali.
  */
 
-export type NomeBrano = "atrio-sala" | "atrio-circo" | "girandola-amen" | "gorgoglio" | "animali-mai";
-export type NomeEffetto = "porta" | "leva-circo" | "leva-sala" | "clacson" | "pop" | "sfoglia" | "uscita" | "campanello";
+export type NomeBrano = "atrio-sala" | "girandola-amen" | "gorgoglio" | "animali-mai";
+export type NomeEffetto = "porta" | "pop" | "sfoglia" | "uscita" | "campanello";
 
 type Strumento =
   | "calliope"
@@ -35,47 +35,6 @@ function hz(n: string | number) {
 }
 
 /* ---------- brani ---------- */
-
-function valzerCirco(): Brano {
-  // valzer da calliope, 3/4, 16 battute
-  const melodia: [string, number][][] = [
-    [["E5", 1], ["G5", 1], ["C6", 1]],
-    [["B5", 2], ["A5", 1]],
-    [["G5", 1], ["F5", 1], ["E5", 1]],
-    [["D5", 3]],
-    [["D5", 1], ["F5", 1], ["B5", 1]],
-    [["A5", 2], ["G5", 1]],
-    [["F5", 1], ["E5", 1], ["D5", 1]],
-    [["C5", 3]],
-    [["A5", 1], ["C6", 1], ["A5", 1]],
-    [["G5", 2], ["E5", 1]],
-    [["F5", 1], ["A5", 1], ["F5", 1]],
-    [["E5", 3]],
-    [["D5", 1], ["E5", 1], ["F5", 1]],
-    [["G5", 1], ["B5", 1], ["D6", 1]],
-    [["C6", 1], ["G5", 1], ["E5", 1]],
-    [["C5", 3]],
-  ];
-  const accordi: Record<string, [string, string[]]> = {
-    C: ["C3", ["E4", "G4", "C5"]],
-    G: ["G2", ["D4", "G4", "B4"]],
-    F: ["F2", ["F4", "A4", "C5"]],
-  };
-  const giro = ["C", "G", "C", "G", "G", "F", "G", "C", "F", "C", "F", "C", "G", "G", "C", "C"];
-  const note: Nota[] = [];
-  giro.forEach((a, b) => {
-    const t = b * 3;
-    const [basso, acc] = accordi[a];
-    note.push([t, 0.9, basso, "basso", 0.9]);
-    for (const k of [1, 2]) acc.forEach((n) => note.push([t + k, 0.45, n, "accordo", 0.22]));
-    let x = t;
-    melodia[b].forEach(([n, d]) => {
-      note.push([x, d * 0.92, n, "calliope", 0.5]);
-      x += d;
-    });
-  });
-  return { bpm: 168, battiti: 48, note, volume: 0.55 };
-}
 
 function ambienteSala(): Brano {
   // accordi lenti e qualche campana: un sottofondo tranquillo
@@ -172,7 +131,6 @@ function carillonGirandola(): Brano {
 
 const BRANI: Record<NomeBrano, () => Brano> = {
   "atrio-sala": ambienteSala,
-  "atrio-circo": valzerCirco,
   "girandola-amen": carillonGirandola,
   gorgoglio: giostraGorgoglio,
   "animali-mai": paradaAnimali,
@@ -529,45 +487,6 @@ class Orchestra {
       case "uscita":
         this.soffio(t, 0.7, 0.2, 2400, 300);
         break;
-      case "leva-circo":
-      case "leva-sala": {
-        // fischietto a coulisse, su o giù
-        const su = nome === "leva-circo";
-        const o = this.osc("sine", su ? 500 : 1500, t, t + 0.7, g);
-        o.frequency.exponentialRampToValueAtTime(su ? 1600 : 450, t + 0.6);
-        const vib = ctx.createOscillator();
-        const vg = ctx.createGain();
-        vib.frequency.value = 9;
-        vg.gain.value = 18;
-        vib.connect(vg).connect(o.frequency);
-        vib.start(t);
-        vib.stop(t + 0.7);
-        this.inviluppo(g, t, 0.03, 0.3, 0.5, 0.15);
-        this.clic(t);
-        break;
-      }
-      case "clacson": {
-        // trombetta da clown: due note che si sgonfiano
-        const f = ctx.createBiquadFilter();
-        f.type = "bandpass";
-        f.frequency.value = 1100;
-        f.Q.value = 1.2;
-        f.connect(g);
-        [0, 0.2].forEach((dt, i) => {
-          const a = this.osc("square", i ? 330 : 392, t + dt, t + dt + 0.18, f);
-          a.frequency.exponentialRampToValueAtTime(i ? 290 : 350, t + dt + 0.16);
-          const b = this.osc("sawtooth", (i ? 330 : 392) * 1.01, t + dt, t + dt + 0.18, f);
-          b.frequency.exponentialRampToValueAtTime(i ? 290 : 350, t + dt + 0.16);
-        });
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.5, t + 0.02);
-        g.gain.setValueAtTime(0.5, t + 0.15);
-        g.gain.exponentialRampToValueAtTime(0.05, t + 0.19);
-        g.gain.exponentialRampToValueAtTime(0.5, t + 0.22);
-        g.gain.setValueAtTime(0.5, t + 0.34);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
-        break;
-      }
       case "pop": {
         const o = this.osc("sine", 900, t, t + 0.12, g);
         o.frequency.exponentialRampToValueAtTime(260, t + 0.1);

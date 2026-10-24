@@ -6,8 +6,7 @@ import { Html, Text, useTexture } from "@react-three/drei";
 import { urlYouTube } from "@/components/YouTube";
 import * as THREE from "three";
 import type { Media, Opera } from "@/content/tipi";
-import { FONT_TESTO, FONT_TITOLI, suParete, useStrisce, type Tema } from "./comune";
-import { Festone } from "./Circo";
+import { FONT_TESTO, FONT_TITOLI, suParete } from "./comune";
 import type { Lingua } from "@/i18n/lingue";
 import { dizionario } from "@/i18n/dizionario";
 
@@ -148,8 +147,8 @@ export function impagina(opera: Opera, aspettoVideo: number, lingua: Lingua): Im
 
 /* ---------- Pezzi ---------- */
 
-// inchiostro dei testi: entrambi i temi hanno pareti chiare
-const INCHIOSTRO: Record<Tema, string> = { sala: "#1e2240", circo: "#1e2240" };
+// inchiostro dei testi
+const INCHIOSTRO = "#1e2240";
 
 type Clic = (e: ThreeEvent<MouseEvent>) => void;
 
@@ -164,13 +163,11 @@ function cliccabile(azione: () => void): Clic {
 function Quadro({
   el,
   texture,
-  tema,
   onClick,
   onSopra,
 }: {
   el: Elemento;
   texture: THREE.Texture;
-  tema: Tema;
   onClick: Clic;
   onSopra: (s: boolean) => void;
 }) {
@@ -182,7 +179,7 @@ function Quadro({
     <group position={position} rotation={rotation}>
       <mesh position={[el.x, el.y, 0.01]}>
         <planeGeometry args={[pw + 0.1, ph + 0.1]} />
-        <meshStandardMaterial color={tema === "sala" ? "#14162a" : "#f4e7cf"} roughness={0.6} />
+        <meshStandardMaterial color="#14162a" roughness={0.6} />
       </mesh>
       <mesh
         position={[el.x, el.y, 0.02]}
@@ -315,7 +312,6 @@ function Video({
 function Testi({
   opera,
   imp,
-  tema,
   lingua,
   onClick,
   onSopra,
@@ -323,13 +319,12 @@ function Testi({
   lingua: Lingua;
   opera: Opera;
   imp: Impaginato;
-  tema: Tema;
   onClick: (id: string) => Clic;
   onSopra: (s: boolean) => void;
 }) {
-  const inchiostro = INCHIOSTRO[tema];
+  const inchiostro = INCHIOSTRO;
   const tenue = "#5a5e7a";
-  const fondo = tema === "sala" ? "#f6f4fb" : "#f6ecd8";
+  const fondo = "#f6f4fb";
   const { position, rotation } = suParete(PARETI[2], LATO - 0.02);
 
   const t = imp.testo;
@@ -423,22 +418,19 @@ function Testi({
 }
 
 function Uscita({
-  tema,
   testi,
   onEsci,
   onScheda,
   onSopra,
 }: {
   testi: { torna: string; targa: string };
-  tema: Tema;
   onEsci: () => void;
   onScheda: () => void;
   onSopra: (s: boolean) => void;
 }) {
   const { position, rotation } = suParete(PARETI[3], LATO - 0.02);
-  const sala = tema === "sala";
-  const cornice = sala ? "#1e2240" : "#f4e7cf";
-  const inchiostro = INCHIOSTRO[tema];
+  const cornice = "#1e2240";
+  const inchiostro = INCHIOSTRO;
   const hover = {
     onPointerOver: (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
@@ -451,7 +443,7 @@ function Uscita({
       {/* porta verso l'atrio, socchiusa sulla luce */}
       <mesh position={[0, 1.15, 0.005]}>
         <planeGeometry args={[1.15, 2.3]} />
-        <meshBasicMaterial color={sala ? "#f3d9a4" : "#fff4dc"} toneMapped={false} />
+        <meshBasicMaterial color="#f3d9a4" toneMapped={false} />
       </mesh>
       {[-1, 1].map((l) => (
         <mesh key={l} position={[0.635 * l, 1.2, 0.03]}>
@@ -466,7 +458,7 @@ function Uscita({
       <group position={[-0.575, 0, 0.04]} rotation={[0, 0.45, 0]}>
         <mesh position={[0.575, 1.15, 0]}>
           <boxGeometry args={[1.15, 2.3, 0.05]} />
-          <meshStandardMaterial color={sala ? "#4a4170" : "#2a5bb8"} roughness={0.55} />
+          <meshStandardMaterial color="#4a4170" roughness={0.55} />
         </mesh>
       </group>
       <mesh position={[0, 1.2, 0.2]} onClick={cliccabile(onEsci)} {...hover}>
@@ -527,75 +519,41 @@ function Faro({ a, y }: { a: number; y: number }) {
   );
 }
 
-function Ambiente({ tema }: { tema: Tema }) {
-  const strisce = useStrisce("#c8322a", "#f4e7cf", 14);
-  const sala = tema === "sala";
-  const angoli: [number, number, number][] = [
-    [-LATO + 0.1, ALTEZZA - 0.08, -LATO + 0.1],
-    [LATO - 0.1, ALTEZZA - 0.08, -LATO + 0.1],
-    [LATO - 0.1, ALTEZZA - 0.08, LATO - 0.1],
-    [-LATO + 0.1, ALTEZZA - 0.08, LATO - 0.1],
-  ];
+function Ambiente() {
   return (
     <group>
-      {sala ? (
-        <>
-          <ambientLight intensity={1.2} color="#fff8f0" />
-          <hemisphereLight args={["#ffffff", "#b49a84", 0.85]} />
-          {PARETI.map((a, i) => (
-            <Faro key={i} a={a} y={2.2} />
-          ))}
-        </>
-      ) : (
-        <>
-          <ambientLight intensity={0.95} color="#fff0d8" />
-          <hemisphereLight args={["#ffe9c7", "#8a3a22", 1.2]} />
-          <pointLight position={[0, ALTEZZA - 0.3, 0]} intensity={45} color="#ffd9a0" decay={1.6} />
-        </>
-      )}
+      <ambientLight intensity={1.2} color="#fff8f0" />
+      <hemisphereLight args={["#ffffff", "#b49a84", 0.85]} />
+      {PARETI.map((a, i) => (
+        <Faro key={i} a={a} y={2.2} />
+      ))}
       {PARETI.map((a, i) => {
         const { position, rotation } = suParete(a, LATO);
         return (
           <mesh key={i} position={[position[0], ALTEZZA / 2, position[2]]} rotation={rotation}>
             <planeGeometry args={[LATO * 2, ALTEZZA]} />
-            {sala ? (
-              <meshStandardMaterial color="#dde0f8" roughness={0.95} />
-            ) : (
-              <meshStandardMaterial map={strisce} roughness={0.9} />
-            )}
+            <meshStandardMaterial color="#dde0f8" roughness={0.95} />
           </mesh>
         );
       })}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[LATO * 2, LATO * 2]} />
-        <meshStandardMaterial color={sala ? "#c4a484" : "#d8bb8b"} roughness={sala ? 0.7 : 1} />
+        <meshStandardMaterial color="#c4a484" roughness={0.7} />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, ALTEZZA, 0]}>
         <planeGeometry args={[LATO * 2, LATO * 2]} />
-        <meshStandardMaterial color={sala ? "#eef0fb" : "#f4e7cf"} roughness={1} />
+        <meshStandardMaterial color="#eef0fb" roughness={1} />
       </mesh>
-      {!sala ? (
-        <>
-          {angoli.map((p, i) => (
-            <Festone key={i} da={p} a={angoli[(i + 1) % 4]} cala={0.3} bandiere={16} />
-          ))}
-          {angoli.map((p, i) => (
-            <Festone key={`x${i}`} da={p} a={[0, ALTEZZA - 0.02, 0]} cala={0.2} bandiere={10} />
-          ))}
-        </>
-      ) : null}
     </group>
   );
 }
 
 function Immagini({
   imp,
-  tema,
   onElemento,
   onSopra,
 }: {
   imp: Impaginato;
-  tema: Tema;
   onElemento: (id: string) => void;
   onSopra: (s: boolean) => void;
 }) {
@@ -615,7 +573,6 @@ function Immagini({
         <Quadro
           el={imp.media}
           texture={textures[textures.length - 1]}
-          tema={tema}
           onClick={cliccabile(() => onElemento("media"))}
           onSopra={onSopra}
         />
@@ -625,7 +582,6 @@ function Immagini({
           key={f.id}
           el={f}
           texture={textures[i]}
-          tema={tema}
           onClick={cliccabile(() => onElemento(f.id))}
           onSopra={onSopra}
         />
@@ -639,7 +595,6 @@ function Immagini({
 export function SalaOpera({
   opera,
   imp,
-  tema,
   fuoco,
   onElemento,
   onEsci,
@@ -653,7 +608,6 @@ export function SalaOpera({
   paretaInVista: number;
   opera: Opera;
   imp: Impaginato;
-  tema: Tema;
   fuoco: string | null;
   onElemento: (id: string) => void;
   onEsci: () => void;
@@ -662,23 +616,17 @@ export function SalaOpera({
   onSopra: (s: boolean) => void;
 }) {
   const t = dizionario(lingua).stanza;
-  const inchiostro = INCHIOSTRO[tema];
+  const inchiostro = INCHIOSTRO;
   const fronte = suParete(PARETI[0], LATO - 0.02);
   const sottotitolo = `${opera.sottotitolo}${opera.anno ? `, ${opera.anno}` : ""}`;
 
   return (
     <>
-      <color attach="background" args={[tema === "sala" ? "#dfe2f5" : "#2a1410"]} />
-      <Ambiente key={tema} tema={tema} />
+      <color attach="background" args={["#dfe2f5"]} />
+      <Ambiente />
 
       {/* parete 0: titolo e video o copertina */}
       <group position={fronte.position} rotation={fronte.rotation}>
-        {tema === "circo" ? (
-          <mesh position={[0, 3.6, 0.01]}>
-            <planeGeometry args={[Math.min(10.4, opera.titolo.length * 0.3 + 1.4), 1.05]} />
-            <meshStandardMaterial color="#f6ecd8" roughness={0.9} />
-          </mesh>
-        ) : null}
         <Text font={FONT_TITOLI} fontSize={0.52} color={inchiostro} anchorX="center" anchorY="middle" position={[0, 3.78, 0.03]}>
           {opera.titolo}
         </Text>
@@ -714,7 +662,7 @@ export function SalaOpera({
       {/* parete 1: foto (e copertina sulla parete 0 quando non c'è video) */}
       {imp.foto.length > 0 || imp.mediaImmagine ? (
         <Suspense fallback={null}>
-          <Immagini imp={imp} tema={tema} onElemento={onElemento} onSopra={onSopra} />
+          <Immagini imp={imp} onElemento={onElemento} onSopra={onSopra} />
         </Suspense>
       ) : null}
       {imp.foto.length === 0 ? (
@@ -726,10 +674,10 @@ export function SalaOpera({
       ) : null}
 
       {/* parete 2: testi */}
-      <Testi opera={opera} imp={imp} tema={tema} lingua={lingua} onClick={(id) => cliccabile(() => onElemento(id))} onSopra={onSopra} />
+      <Testi opera={opera} imp={imp} lingua={lingua} onClick={(id) => cliccabile(() => onElemento(id))} onSopra={onSopra} />
 
       {/* parete 3: uscita */}
-      <Uscita tema={tema} testi={{ torna: t.tornaStanza, targa: t.targa }} onEsci={onEsci} onScheda={onScheda} onSopra={onSopra} />
+      <Uscita testi={{ torna: t.tornaStanza, targa: t.targa }} onEsci={onEsci} onScheda={onScheda} onSopra={onSopra} />
     </>
   );
 }
